@@ -27,9 +27,7 @@ export default function LandingPage() {
     return (
       <div className='flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center'>
         <Loader2 className='h-8 w-8 animate-spin text-primary mb-4' />
-        <p className='text-muted-foreground animate-pulse uppercase tracking-widest text-xs'>
-          Initializing Security...
-        </p>
+        <p className='text-muted-foreground animate-pulse uppercase tracking-widest text-xs'></p>
       </div>
     );
   }
@@ -45,22 +43,25 @@ export default function LandingPage() {
             <span className='text-xl tracking-tighter italic uppercase'>
               {(process.env.NEXT_PUBLIC_APP_NAME || 'GT Express').split(' ')[0]}{' '}
               <span className='text-primary tracking-normal not-italic underline decoration-primary/30'>
-                {(process.env.NEXT_PUBLIC_APP_NAME || 'GT Express').split(' ').slice(1).join(' ')}
+                {(process.env.NEXT_PUBLIC_APP_NAME || 'GT Express')
+                  .split(' ')
+                  .slice(1)
+                  .join(' ')}
               </span>
             </span>
-
           </div>
         </div>
         <div className='flex flex-1 items-center justify-center py-12'>
           <div className='w-full max-w-sm'>
-            <SignIn 
+            <SignIn
               appearance={{
                 elements: {
-                  formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
+                  formButtonPrimary:
+                    'bg-primary hover:bg-primary/90 text-primary-foreground',
                   card: 'shadow-none border-none bg-transparent',
                   headerTitle: 'text-2xl tracking-tight',
                   headerSubtitle: 'text-sm text-muted-foreground',
-                }
+                },
               }}
             />
           </div>
@@ -77,7 +78,7 @@ export default function LandingPage() {
           <div className='p-8 rounded-2xl bg-background/10 backdrop-blur-md border border-white/10 shadow-2xl space-y-4'>
             <div className='h-px w-12 bg-primary' />
             <h2 className='text-3xl text-white tracking-tight leading-tight'>
-              Global Visibility. <br />
+              Global Visibility.
               <span className='text-primary'>Real-Time</span> Intelligence.
             </h2>
             <p className='text-white/60 text-sm leading-relaxed max-w-md'>

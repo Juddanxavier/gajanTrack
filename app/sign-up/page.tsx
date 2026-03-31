@@ -163,12 +163,18 @@ export default function SignUpPage() {
             <div className="size-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
               <Box className="size-6 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-black tracking-tighter italic">KAJEN <span className="text-primary not-italic underline decoration-primary/30">TRACK</span></span>
+            <span className="text-2xl font-black tracking-tighter italic uppercase">
+              {(process.env.NEXT_PUBLIC_APP_NAME || 'GT Express').split(' ')[0]}{" "}
+              <span className="text-primary not-italic underline decoration-primary/30">
+                {(process.env.NEXT_PUBLIC_APP_NAME || 'GT Express').split(' ').slice(1).join(' ')}
+              </span>
+            </span>
           </Link>
           <CardTitle className="text-2xl font-bold tracking-tight">Create an account</CardTitle>
           <CardDescription>
-            Enter your details to get started with Kajen Track
+            Enter your details to get started with {process.env.NEXT_PUBLIC_APP_NAME || 'GT Express'}
           </CardDescription>
+
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">

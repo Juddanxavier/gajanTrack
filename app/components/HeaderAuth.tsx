@@ -14,8 +14,8 @@ export function HeaderAuth() {
   return (
     <div className='flex items-center gap-4'>
       <UserButton 
-        afterSignOutUrl="/"
         appearance={{
+
           elements: {
             userButtonTrigger: "hover:bg-accent/50 transition-all rounded-lg p-1",
             userButtonAvatarBox: "h-8 w-8 border border-border/40 shadow-sm",
