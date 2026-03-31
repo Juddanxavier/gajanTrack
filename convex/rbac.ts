@@ -57,7 +57,7 @@ export async function requireUserAction(ctx: ActionCtx, sessionId?: string) {
   }
 
   // Use string lookup to avoid circular dependency with api
-  const user = await ctx.runQuery("users:getCurrentUser" as any, { sessionId });
+  const user = await ctx.runQuery("users/queries:getCurrentUser" as any, { sessionId });
   if (!user) {
     throw new Error("Unauthenticated: User record not found");
   }

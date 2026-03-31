@@ -21,7 +21,7 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm({ initialData, sessionId }: { initialData: any, sessionId?: string }) {
-  const updateProfile = useMutation(api.settings.updateUserSettings);
+  const updateProfile = useMutation(api.users.mutations.updateUserSettings);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -122,3 +122,4 @@ export function ProfileForm({ initialData, sessionId }: { initialData: any, sess
     </Card>
   );
 }
+

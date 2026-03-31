@@ -51,3 +51,4 @@ export function CopyButton({ value, label, className, iconSize = 12 }: CopyButto
     </Button>
   );
 }
+

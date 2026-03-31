@@ -16,7 +16,7 @@ import { ChevronsUpDown, Check, Building2 } from "lucide-react";
 
 export function OrgSwitcher() {
   const { activeOrgId, setActiveOrgId, organizations, activeOrg, sessionId } = useOrg();
-  const currentUser = useQuery(api.users.getCurrentUser, { sessionId });
+  const currentUser = useQuery(api.users.queries.getCurrentUser, { sessionId });
 
   // If user is not an admin, they can't switch orgs
   if (currentUser?.role !== "admin") return null;
@@ -49,3 +49,4 @@ export function OrgSwitcher() {
     </DropdownMenu>
   );
 }
+

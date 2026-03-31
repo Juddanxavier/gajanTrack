@@ -183,3 +183,4 @@ export const getColumns = (onViewDetails: (quote: any) => void): ColumnDef<Doc<"
     },
   },
 ];
+

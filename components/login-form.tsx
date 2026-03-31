@@ -1,79 +1,132 @@
+import { SignInButton } from "@clerk/nextjs"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import Link from "next/link"
 import { Loader2 } from "lucide-react"
+import Link from "next/link"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 
-interface LoginFormProps extends Omit<React.ComponentPropsWithoutRef<"div">, "onSubmit"> {
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
-  onSocialLogin: (provider: "google") => void
+const signinSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid administrator email.",
+  }),
+  password: z.string().min(5, {
+    message: "Password must be at least 5 characters.",
+  }),
+})
+
+type SigninValues = z.infer<typeof signinSchema>
+
+interface LoginFormProps extends Omit<React.ComponentPropsWithoutRef<"form">, "onSubmit"> {
+  onSubmit: (values: SigninValues) => void
   loading?: boolean
   error?: string
 }
 
-
 export function LoginForm({
   className,
   onSubmit,
-  onSocialLogin,
   loading,
   error,
   ...props
 }: LoginFormProps) {
+  const form = useForm<SigninValues>({
+    resolver: zodResolver(signinSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <form onSubmit={onSubmit}>
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-2xl font-semibold">Login to your account</h1>
-            <p className="text-balance text-sm text-muted-foreground">
-              Enter your email below to login to your account
-            </p>
-          </div>
-          <div className="grid gap-6">
-            {error && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-3 rounded-lg text-center font-medium">
-                {error}
-              </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className={cn("flex flex-col gap-6", className)} {...props}>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h1 className="text-2xl tracking-tight">System Login</h1>
+          <p className="text-sm text-muted-foreground">
+            Enter credentials to access the tracking vault
+          </p>
+        </div>
+        <div className="grid gap-6">
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-3 rounded-lg text-center">
+              {error}
+            </div>
+          )}
+          
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem className="grid gap-2 space-y-0">
+                <FormLabel className="text-xs opacity-70">Administrator Email</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="admin@kajen.track" 
+                    {...field} 
+                    disabled={loading}
+                    className="h-11 bg-muted/50 border-border/40 focus:bg-background transition-all"
+                  />
+                </FormControl>
+                <FormMessage className="text-[10px]" />
+              </FormItem>
             )}
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                name="email"
-                type="email" 
-                placeholder="m@example.com" 
-                required 
-                disabled={loading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="#"
-                  className="ml-auto text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot your password?
-                </Link>
-              </div>
-              <Input id="password" name="password" type="password" required disabled={loading} />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Login
-            </Button>
-            <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-              <span className="relative z-10 bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem className="grid gap-2 space-y-0">
+                <div className="flex items-center">
+                  <FormLabel className="text-xs opacity-70">Password</FormLabel>
+                  <Link
+                    href="/forgot-password"
+                    className="ml-auto text-xs underline-offset-4 hover:underline text-muted-foreground"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <FormControl>
+                  <Input 
+                    type="password" 
+                    {...field} 
+                    disabled={loading}
+                    className="h-11 bg-muted/50 border-border/40 focus:bg-background transition-all"
+                  />
+                </FormControl>
+                <FormMessage className="text-[10px]" />
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="w-full h-11" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Sign in
+          </Button>
+          
+          <div className="relative text-center text-xs after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+            <span className="relative z-10 bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+          
+          <SignInButton mode="redirect" forceRedirectUrl="/dashboard">
             <Button 
               type="button"
               variant="outline" 
-              className="w-full" 
-              onClick={() => onSocialLogin("google")}
+              className="w-full h-11 border-border/40 hover:bg-muted/50 transition-all" 
               disabled={loading}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
@@ -94,18 +147,11 @@ export function LoginForm({
                   fill="#EA4335"
                 />
               </svg>
-              Login with Google
+              Sign in with Google
             </Button>
-          </div>
-          <div className="text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/sign-up" className="underline underline-offset-4">
-              Sign up
-            </Link>
-          </div>
+          </SignInButton>
         </div>
       </form>
-    </div>
+    </Form>
   )
 }
-

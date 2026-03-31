@@ -16,9 +16,10 @@ const geistMono = Geist_Mono({
 
 import { ThemeProvider } from '@/components/theme-provider';
 export const metadata: Metadata = {
-  title: 'Kajen Track',
+  title: process.env.NEXT_PUBLIC_APP_NAME || 'GT Express',
   description: 'Your premium shipment tracking platform.',
 };
+
 
 import { ConvexClientProvider } from '@/lib/convex';
 import { Toaster } from '@/components/ui/sonner';
@@ -46,3 +47,4 @@ export default async function RootLayout({
     </html>
   );
 }
+

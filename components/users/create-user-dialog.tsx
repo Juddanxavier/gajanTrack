@@ -54,8 +54,8 @@ interface CreateUserDialogProps {
 export function CreateUserDialog({ children }: CreateUserDialogProps) {
   const [open, setOpen] = React.useState(false);
   const { sessionId } = useOrg();
-  const currentUser = useQuery(api.users.getCurrentUser, { sessionId });
-  const organizations = useQuery(api.organizations.listOrganizations, { sessionId });
+  const currentUser = useQuery(api.users.queries.getCurrentUser, { sessionId });
+  const organizations = useQuery(api.organizations.queries.listOrganizations, { sessionId });
   const createUserAction = useAction(api.clerk.createUser);
 
   const isAdmin = currentUser?.role === 'admin';
@@ -206,7 +206,7 @@ export function CreateUserDialog({ children }: CreateUserDialogProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {organizations?.map((org) => (
+                          {organizations?.map((org: any) => (
                             <SelectItem key={org._id} value={org._id}>
                               {org.name}
                             </SelectItem>
@@ -230,7 +230,7 @@ export function CreateUserDialog({ children }: CreateUserDialogProps) {
                   <IconBuilding className="size-4 text-primary" />
                   <span className="uppercase tracking-wide">Org:</span>
                   <span className="text-foreground font-semibold truncate max-w-[120px]">
-                    {organizations?.find(o => o._id === form.getValues('orgId'))?.name || 'Assigned Org'}
+                    {organizations?.find((o: any) => o._id === form.getValues('orgId'))?.name || 'Assigned Org'}
                   </span>
                 </div>
               </div>
@@ -251,3 +251,4 @@ export function CreateUserDialog({ children }: CreateUserDialogProps) {
     </Dialog>
   );
 }
+

@@ -22,7 +22,7 @@ export const createUser = action({
     const { user: currentUser } = await requireUserAction(ctx, args.sessionId);
     
     // 2. Pre-flight check: Does user already exist in Convex?
-    const existingUser = await ctx.runQuery(api.users.findCustomerByContact, {
+    const existingUser = await ctx.runQuery(api.users.queries.findCustomerByContact, {
       contact: args.email,
       orgId: args.orgId,
       sessionId: args.sessionId

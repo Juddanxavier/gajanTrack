@@ -31,7 +31,7 @@ const countryNameMap: Record<string, string> = {
 };
 
 export function MapView({ orgId, sessionId }: MapViewProps) {
-  const analytics = useQuery(api.shipments.getDetailedAnalytics, { orgId, sessionId });
+  const analytics = useQuery(api.shipments.queries.getDetailedAnalytics, { orgId, sessionId });
 
   if (analytics === undefined) {
     return (
@@ -45,7 +45,7 @@ export function MapView({ orgId, sessionId }: MapViewProps) {
   const { countryData } = analytics;
 
   // Find max value for color scaling
-  const maxShipments = Math.max(...countryData.map(c => c.value), 1);
+  const maxShipments = Math.max(...countryData.map((c: any) => c.value), 1);
 
   const colorScale = scaleLinear<string>()
     .domain([0, maxShipments])
@@ -75,7 +75,7 @@ export function MapView({ orgId, sessionId }: MapViewProps) {
                         geographies.map((geo: any) => {
                           const countryName = geo.properties.name;
                           // Check for matches in our data (including mapped variations)
-                          const dataPoint = countryData.find(c => 
+                          const dataPoint = countryData.find((c: any) => 
                              c.name === countryName || 
                              countryNameMap[c.name] === countryName
                           );
@@ -134,7 +134,7 @@ export function MapView({ orgId, sessionId }: MapViewProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-               {countryData.slice(0, 5).map((hub, idx) => (
+               {countryData.slice(0, 5).map((hub: any, idx: number) => (
                  <div key={idx} className="flex items-center justify-between group">
                     <div className="flex items-center gap-4">
                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -168,3 +168,4 @@ export function MapView({ orgId, sessionId }: MapViewProps) {
     </div>
   );
 }
+

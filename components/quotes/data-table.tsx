@@ -124,9 +124,9 @@ export function DataTable<TData>({
   const [updatePrice, setUpdatePrice] = React.useState<string>("");
   const [updateNotes, setUpdateNotes] = React.useState<string>("");
 
-  const updateQuoteStatusMutation = useMutation(api.quotes.updateQuoteStatus);
-  const softDelete = useMutation(api.quotes.softDeleteQuote);
-  const archiveQuoteMutation = useMutation(api.quotes.archiveQuote);
+  const updateQuoteStatusMutation = useMutation(api.quotes.mutations.updateQuoteStatus);
+  const softDelete = useMutation(api.quotes.mutations.softDeleteQuote);
+  const archiveQuoteMutation = useMutation(api.quotes.mutations.archiveQuote);
 
   const handleOpenDetails = (quote: any) => {
     setSelectedQuote(quote);
@@ -760,3 +760,4 @@ export function DataTable<TData>({
     </div>
   );
 }
+

@@ -35,3 +35,4 @@ export function Sparkline({ data, color = "hsl(var(--primary))" }: SparklineProp
     </ChartContainer>
   )
 }
+

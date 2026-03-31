@@ -139,3 +139,4 @@ export function StatusDistribution({ data }: StatusDistributionProps) {
     </Card>
   )
 }
+

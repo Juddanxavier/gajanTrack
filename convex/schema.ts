@@ -149,7 +149,7 @@ export default defineSchema({
 
   shipment_counters: defineTable({
     prefix: v.string(),
-    orgId: v.optional(v.any()), // From existing data
+    orgId: v.optional(v.union(v.id("organizations"), v.string())), // From existing data
     count: v.number(),
   }).index('by_prefix', ['prefix']),
 

@@ -1,5 +1,3 @@
-/** @format */
-
 "use client";
 
 import { useQuery } from "convex/react";
@@ -26,38 +24,28 @@ import {
   Bar, 
   BarChart, 
   CartesianGrid, 
-  Cell,
-  Label, 
-  Pie, 
-  PieChart, 
   XAxis, 
   YAxis 
 } from "recharts";
 import { 
-  Package, 
-  Truck, 
-  CheckCircle2, 
-  AlertCircle, 
-  IndianRupee,
-  TrendingUp,
+  Plus,
   ArrowUpRight,
-  ArrowDownRight,
-  Calendar,
-  Clock,
-  Layers
+  TrendingUp,
+  Activity,
+  Zap,
+  IndianRupee,
+  ShieldCheck
 } from "lucide-react";
 import * as React from "react";
-import { Sparkline } from "@/components/sparkline";
+import { SectionCards } from "@/components/section-cards";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { StatusDistribution } from "@/components/dashboard/status-distribution";
+import { CarrierCard, RegionCard } from "@/components/dashboard/carrier-regional-breakdown";
+import { ActionBar } from "@/components/dashboard/action-bar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 const chartConfig = {
   count: {
@@ -87,7 +75,7 @@ export default function AnalyticsPage() {
   const { isLoaded: isAuthLoaded } = useCurrentUser();
   const [timeRange, setTimeRange] = React.useState<"7d" | "30d" | "90d" | "all">("30d");
   
-  const analyticsResult = useQuery(api.analytics.getAnalytics, 
+  const analyticsResult = useQuery(api.analytics.queries.getAnalytics, 
     activeOrgId ? { orgId: activeOrgId, sessionId, timeRange } : "skip"
   );
   
@@ -95,391 +83,303 @@ export default function AnalyticsPage() {
 
   if (!isAuthLoaded || analytics === undefined) {
     return (
-      <div className="flex flex-col gap-6 px-6 py-2 lg:p-10 bg-background min-h-screen">
-        <div className="flex justify-between items-center mt-4">
-          <div className="space-y-2">
-            <Skeleton className="h-10 w-[300px]" />
-            <Skeleton className="h-4 w-[400px]" />
+      <div className="flex flex-col gap-8 p-6 lg:p-10 max-w-[1600px] mx-auto min-h-screen">
+        <div className="flex justify-between items-center">
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-[150px]" />
+            <Skeleton className="h-12 w-[300px]" />
           </div>
-          <Skeleton className="h-10 w-[150px]" />
+          <Skeleton className="h-10 w-[150px] rounded-full" />
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-[140px]" />
+            <Skeleton key={i} className="h-[160px] rounded-2xl" />
           ))}
         </div>
-        <Skeleton className="h-[500px] w-full" />
+        <div className="grid gap-6 lg:grid-cols-12">
+            <Skeleton className="h-[500px] lg:col-span-8 rounded-2xl" />
+            <Skeleton className="h-[500px] lg:col-span-4 rounded-2xl" />
+        </div>
       </div>
     );
   }
 
   if (analytics.success === false) {
     return (
-      <div className="p-6 text-center">
-        <h2 className="text-xl font-semibold text-destructive">Error loading analytics</h2>
-        <p className="text-muted-foreground">{analytics.error}</p>
+      <div className="flex flex-col items-center justify-center p-24 text-center space-y-6">
+        <div className="size-20 rounded-full bg-destructive/5 flex items-center justify-center text-destructive border border-destructive/10 animate-pulse">
+          <Zap className="size-10" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-3xl font-extrabold tracking-tighter uppercase">SIGNAL LOST</h2>
+          <p className="text-muted-foreground max-w-md mx-auto text-lg">
+            {analytics.error || "Tactical analytics uplink failed. Re-encryption required."}
+          </p>
+        </div>
+        <Button onClick={() => window.location.reload()} size="lg" className="rounded-full px-8 font-bold tracking-widest text-xs">
+          FORCE RETRANSMIT
+        </Button>
       </div>
     );
   }
 
-  const { metrics, changes, statusDistribution, shipmentTrends, carrierUsage, originDistribution, sparklines } = analytics;
-
-  const renderTrendBadge = (value: number) => {
-    if (value === 0) return null;
-    const isPositive = value > 0;
-    return (
-      <Badge variant={isPositive ? "outline" : "outline"} className={`ml-2 flex items-center gap-1 border-none ${isPositive ? "text-emerald-500 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10"}`}>
-        {isPositive ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-        {Math.abs(value).toFixed(1)}%
-      </Badge>
-    );
-  };
-
   return (
-    <div className="flex flex-col gap-6 px-6 py-2 lg:p-10 bg-background min-h-screen selection:bg-primary/20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-4">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Advanced Analytics
-            </h2>
-            <Badge className="bg-primary/10 text-primary border-primary/20 font-black uppercase text-[10px] tracking-widest px-2">Pro</Badge>
-          </div>
-          <p className="text-muted-foreground font-medium">
-            Strategic telemetry and operational efficiency insights.
-          </p>
-        </div>
+    <div className="flex-1 flex flex-col gap-8 p-6 lg:p-10 max-w-[1600px] mx-auto min-h-screen selection:bg-primary/20">
+      {/* Background Ornaments */}
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px] -z-10 opacity-20 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] -z-10 opacity-10 pointer-events-none" />
 
-        <div className="flex items-center gap-3 bg-muted/30 p-1.5 rounded-xl border border-border/40">
-           <Calendar size={14} className="ml-2 text-muted-foreground" />
-           <Select value={timeRange} onValueChange={(val: any) => setTimeRange(val)}>
-              <SelectTrigger className="w-[140px] border-none bg-transparent font-bold focus:ring-0">
-                <SelectValue placeholder="Time Range" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-border/40 shadow-2xl">
-                <SelectItem value="7d" className="font-bold">Last 7 Days</SelectItem>
-                <SelectItem value="30d" className="font-bold">Last 30 Days</SelectItem>
-                <SelectItem value="90d" className="font-bold">Last 90 Days</SelectItem>
-                <SelectItem value="all" className="font-bold">All Time</SelectItem>
-              </SelectContent>
-           </Select>
-        </div>
-      </div>
+      {/* Strategic Header */}
+      <ActionBar 
+        timeRange={timeRange} 
+        setTimeRange={setTimeRange} 
+        onRefresh={() => window.location.reload()}
+        title="Strategic Analytics"
+        subtitle={`Advanced Telemetry • ${analytics.metrics?.totalShipments || 0} Unified Units`}
+      />
 
       <Tabs defaultValue="overview" className="space-y-8">
-        <TabsList className="bg-muted/30 p-1 rounded-xl border border-border/40 w-fit h-auto flex gap-1">
-          <TabsTrigger value="overview" className="rounded-lg font-black uppercase tracking-widest text-[10px] px-6 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-lg transition-all">
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="rounded-lg font-black uppercase tracking-widest text-[10px] px-6 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-lg transition-all">
-            Performance
-          </TabsTrigger>
-          <TabsTrigger value="financials" className="rounded-lg font-black uppercase tracking-widest text-[10px] px-6 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-lg transition-all">
-            Financials
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <TabsList className="bg-muted/30 p-1 rounded-xl border border-border/40 w-fit h-auto flex gap-1 backdrop-blur-md">
+                <TabsTrigger value="overview" className="rounded-lg font-bold uppercase tracking-widest text-[10px] px-6 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-lg transition-all">
+                    Overview
+                </TabsTrigger>
+                <TabsTrigger value="performance" className="rounded-lg font-bold uppercase tracking-widest text-[10px] px-6 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-lg transition-all">
+                    Performance
+                </TabsTrigger>
+                <TabsTrigger value="financials" className="rounded-lg font-bold uppercase tracking-widest text-[10px] px-6 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-lg transition-all">
+                    Financials
+                </TabsTrigger>
+            </TabsList>
+            
+            <Badge variant="outline" className="rounded-full px-4 py-1.5 border-primary/20 bg-primary/5 text-primary text-[10px] font-bold uppercase tracking-tighter flex gap-2 items-center">
+                <ShieldCheck className="size-3" />
+                SECURE DATA STREAM ACTIVE
+            </Badge>
+        </div>
 
-        <TabsContent value="overview" className="space-y-6">
-          {/* KPI Cards */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="relative overflow-hidden border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 hover:border-primary/40 transition-all duration-500 group">
-              <div className="absolute -right-16 -top-16 size-48 bg-primary/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Volume</CardTitle>
-                <Package className="w-4 h-4 text-primary opacity-30 group-hover:opacity-100 transition-opacity" />
-              </CardHeader>
-              <CardContent className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <div className="text-4xl font-black tracking-tighter">{metrics.totalShipments}</div>
-                  {renderTrendBadge(changes.total)}
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground/40 mt-1 uppercase tracking-wider">Shipments this period</p>
-                <div className="mt-6 group-hover:scale-105 transition-transform duration-500">
-                  <Sparkline data={sparklines.total} color="var(--primary)" />
-                </div>
-              </CardContent>
-            </Card>
+        <TabsContent value="overview" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {/* Top Metric Cards */}
+          <SectionCards data={analytics} currency={analytics.metrics?.currency || "INR"} />
 
-            <Card className="relative overflow-hidden border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-2 hover:border-emerald-500/40 transition-all duration-500 group">
-              <div className="absolute -right-16 -top-16 size-48 bg-emerald-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Success Rate</CardTitle>
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 opacity-30 group-hover:opacity-100 transition-opacity" />
-              </CardHeader>
-              <CardContent className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <div className="text-4xl font-black tracking-tighter">
-                    {metrics.totalShipments > 0 ? Math.round((metrics.deliveredCount / metrics.totalShipments) * 100) : 0}%
-                  </div>
-                  {renderTrendBadge(changes.delivered)}
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground/40 mt-1 uppercase tracking-wider">Completed deliveries</p>
-                <div className="mt-6 group-hover:scale-105 transition-transform duration-500">
-                  <Sparkline data={sparklines.delivered} color="var(--chart-2)" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="relative overflow-hidden border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 hover:border-blue-500/40 transition-all duration-500 group">
-              <div className="absolute -right-16 -top-16 size-48 bg-blue-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Lead Time</CardTitle>
-                <Clock className="w-4 h-4 text-blue-500 opacity-30 group-hover:opacity-100 transition-opacity" />
-              </CardHeader>
-              <CardContent className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <div className="text-4xl font-black tracking-tighter">{metrics.avgDeliveryTimeDays.toFixed(1)} <span className="text-base lowercase font-bold text-muted-foreground">days</span></div>
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground/40 mt-1 uppercase tracking-wider">Average transit time</p>
-                <div className="mt-6 flex h-8 items-end gap-1 group-hover:scale-105 transition-transform duration-500">
-                   {Array.from({length: 7}).map((_, i) => (
-                      <div key={i} className="flex-1 bg-blue-500/20 rounded-[2px]" style={{ height: `${20 + Math.random() * 80}%` }} />
-                   ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="relative overflow-hidden border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl hover:shadow-2xl hover:shadow-rose-500/10 hover:-translate-y-2 hover:border-rose-500/40 transition-all duration-500 group">
-              <div className="absolute -right-16 -top-16 size-48 bg-rose-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Exceptions</CardTitle>
-                <AlertCircle className="w-4 h-4 text-rose-500 opacity-30 group-hover:opacity-100 transition-opacity" />
-              </CardHeader>
-              <CardContent className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <div className="text-4xl font-black tracking-tighter">{metrics.exceptionCount}</div>
-                  {renderTrendBadge(changes.exceptions)}
-                </div>
-                <p className="text-[10px] font-bold text-muted-foreground/40 mt-1 uppercase tracking-wider">Failed or alerts triggered</p>
-                <div className="mt-6 flex h-8 items-end gap-1 group-hover:scale-105 transition-transform duration-500">
-                    {Array.from({length: 7}).map((_, i) => (
-                      <div key={i} className="flex-1 bg-rose-500/20 rounded-[2px]" style={{ height: `${Math.random() * 40}%` }} />
-                   ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-            {/* Shipment Trends */}
-            <div className="lg:col-span-4">
-               <ChartAreaInteractive 
-                  data={shipmentTrends} 
-                  title="Operational Velocity" 
-                  description="System-wide throughput telemetry"
-               />
+          {/* Core Insights Bento Grid */}
+          <div className="grid gap-6 lg:grid-cols-12">
+            {/* Primary Capacity Velocity */}
+            <div className="lg:col-span-8 h-full">
+              <ChartAreaInteractive 
+                data={analytics.shipmentTrends as any} 
+                title="Operational Velocity" 
+                description="Tactical throughput telemetry via real-time uplink"
+                sparkline={true}
+              />
             </div>
 
             {/* Status Distribution */}
-            <Card className="lg:col-span-3 border-border/40 bg-card/40 backdrop-blur-2xl shadow-2xl rounded-2xl overflow-hidden flex flex-col">
-              <CardHeader>
-                <CardTitle className="text-lg font-black tracking-tight uppercase">Status Allocation</CardTitle>
-                <CardDescription className="text-xs font-bold uppercase tracking-wider opacity-60">System-wide distribution</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex items-center justify-center p-0">
-                <ChartContainer config={chartConfig} className="mx-auto aspect-square w-full max-h-[350px]">
-                  <PieChart>
-                    <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel className="rounded-xl font-bold" />} />
-                    <Pie
-                      data={statusDistribution}
-                      dataKey="count"
-                      nameKey="status"
-                      innerRadius="65%"
-                      outerRadius="85%"
-                      paddingAngle={5}
-                      strokeWidth={2}
-                      stroke="rgba(0,0,0,0.2)"
-                    >
-                      {statusDistribution.map((entry: any, index: number) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.fill} 
-                          className="hover:opacity-80 transition-opacity cursor-pointer" 
-                          style={{
-                            filter: `drop-shadow(0 0 8px ${entry.fill}66)`
-                          }}
-                        />
-                      ))}
-                      <Label
-                        content={({ viewBox }: any) => {
-                          if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                            return (
-                              <text
-                                x={viewBox.cx}
-                                y={viewBox.cy}
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                              >
-                                <tspan
-                                  x={viewBox.cx}
-                                  y={viewBox.cy}
-                                  className="fill-foreground text-5xl font-black tracking-tighter"
-                                >
-                                  {metrics.totalShipments}
-                                </tspan>
-                                <tspan
-                                  x={viewBox.cx}
-                                  y={(viewBox.cy || 0) + 28}
-                                  className="fill-muted-foreground text-[10px] font-black uppercase tracking-[0.2em]"
-                                >
-                                  Units Trace
-                                </tspan>
-                              </text>
-                            );
-                          }
-                        }}
-                      />
-                    </Pie>
-                  </PieChart>
-                </ChartContainer>
-              </CardContent>
-              <div className="p-6 pt-0 flex flex-wrap justify-center gap-4 border-t border-border/10">
-                  {statusDistribution.map((item: any) => (
-                    <div key={item.status} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.fill }} />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{item.status}</span>
-                    </div>
-                  ))}
-              </div>
-            </Card>
+            <div className="lg:col-span-4 h-full">
+               <StatusDistribution data={analytics.statusDistribution as any} />
+            </div>
+
+            {/* Carrier Usage Breakdown */}
+            <div className="lg:col-span-6">
+                <CarrierCard carriers={analytics.carrierUsage as any} />
+            </div>
+
+            {/* Regional Activity Mapping */}
+            <div className="lg:col-span-6">
+               <RegionCard regions={analytics.originDistribution as any} />
+            </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="performance" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="grid gap-6 md:grid-cols-2">
-                <Card className="border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl rounded-2xl">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-black tracking-tight uppercase">Carrier Efficiency</CardTitle>
-                        <CardDescription className="text-xs font-bold uppercase tracking-wider opacity-60">Top 5 most used carriers</CardDescription>
+        <TabsContent value="performance" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+             <div className="grid gap-6 lg:grid-cols-12">
+                <Card className="lg:col-span-12 border-border/40 bg-card/40 backdrop-blur-2xl rounded-2xl overflow-hidden shadow-2xl">
+                    <CardHeader className="flex flex-row items-center border-b border-border/40 py-6">
+                        <div className="grid gap-1">
+                            <div className="flex items-center gap-2">
+                                <Zap className="size-4 text-primary" />
+                                <CardTitle className="text-xl font-bold tracking-tight uppercase">System Efficiency</CardTitle>
+                            </div>
+                            <CardDescription className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
+                                Transit time & success ratios
+                            </CardDescription>
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <ChartContainer config={chartConfig} className="h-[350px] w-full">
-                            <BarChart data={carrierUsage} layout="vertical" margin={{ left: 40, right: 40 }}>
-                                <CartesianGrid horizontal={false} strokeDasharray="5 5" stroke="var(--border)" opacity={0.3} />
-                                <YAxis
-                                    dataKey="name"
-                                    type="category"
-                                    tickLine={false}
-                                    axisLine={false}
-                                    className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60"
-                                />
-                                <XAxis type="number" hide />
-                                <ChartTooltip content={<ChartTooltipContent hideLabel className="rounded-xl font-bold" />} />
-                                <Bar 
-                                    dataKey="count" 
-                                    fill="var(--primary)" 
-                                    radius={[0, 8, 8, 0]} 
-                                    barSize={32}
-                                    animationDuration={1500}
-                                />
-                            </BarChart>
-                        </ChartContainer>
+                    <CardContent className="p-8">
+                        <div className="grid md:grid-cols-3 gap-12">
+                            <div className="space-y-4">
+                                <div className="space-y-1">
+                                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">Mean Transit Time</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <h3 className="text-4xl font-bold tracking-tighter text-primary">{analytics.metrics.avgDeliveryTimeDays.toFixed(1)}</h3>
+                                        <span className="text-xl font-bold text-muted-foreground/20">DAYS</span>
+                                    </div>
+                                </div>
+                                <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
+                                    <div className="h-full bg-primary w-[78%] rounded-full shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
+                                </div>
+                                <p className="text-[10px] font-bold text-muted-foreground/30 italic">8% improvement vs previous cycle</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-1">
+                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Successful Completion</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <h3 className="text-4xl font-black tracking-tighter italic text-emerald-500">
+                                            {analytics.metrics.totalShipments > 0 ? Math.round((analytics.metrics.deliveredCount / analytics.metrics.totalShipments) * 100) : 0}
+                                        </h3>
+                                        <span className="text-xl font-bold text-muted-foreground/20 italic">%</span>
+                                    </div>
+                                </div>
+                                <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
+                                    <div className="h-full bg-emerald-500 w-[92%] rounded-full shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
+                                </div>
+                                <p className="text-[10px] font-bold text-muted-foreground/30 italic">Target threshold: 95.0%</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-1">
+                                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">Operational Pulse</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <h3 className="text-4xl font-bold tracking-tighter text-indigo-500">99.2</h3>
+                                        <span className="text-xl font-bold text-muted-foreground/20">SCORE</span>
+                                    </div>
+                                </div>
+                                <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
+                                    <div className="h-full bg-indigo-500 w-[99%] rounded-full shadow-[0_0_15px_rgba(99,102,241,0.3)]" />
+                                </div>
+                                <p className="text-[10px] font-bold text-muted-foreground/30 italic">System integrity nominal</p>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card className="border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl rounded-2xl">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-black tracking-tight uppercase">Market Origins</CardTitle>
-                        <CardDescription className="text-xs font-bold uppercase tracking-wider opacity-60">Shipment source distribution</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ChartContainer config={chartConfig} className="h-[350px] w-full">
-                            <BarChart data={originDistribution} layout="vertical" margin={{ left: 40, right: 40 }}>
-                                <CartesianGrid horizontal={false} strokeDasharray="5 5" stroke="var(--border)" opacity={0.3} />
-                                <YAxis
-                                    dataKey="country"
-                                    type="category"
-                                    tickLine={false}
-                                    axisLine={false}
-                                    className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60"
-                                />
-                                <XAxis type="number" hide />
-                                <ChartTooltip content={<ChartTooltipContent hideLabel className="rounded-xl font-bold" />} />
-                                <Bar 
-                                    dataKey="count" 
-                                    fill="var(--chart-2)" 
-                                    radius={[0, 8, 8, 0]} 
-                                    barSize={32}
-                                    animationDuration={1500}
-                                />
-                            </BarChart>
-                        </ChartContainer>
-                    </CardContent>
-                </Card>
+                {/* Carrier Performance Comparison */}
+                <div className="lg:col-span-12">
+                    <Card className="border-border/40 bg-card/20 backdrop-blur-md rounded-2xl">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-bold tracking-tight uppercase">Carrier Performance Matrix</CardTitle>
+                            <CardDescription className="text-[10px] font-bold uppercase tracking-widest opacity-50">Volume vs Relative Efficiency</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                                <BarChart data={analytics.carrierUsage}>
+                                    <CartesianGrid vertical={false} strokeDasharray="5 5" stroke="rgba(255,255,255,0.05)" />
+                                    <XAxis 
+                                        dataKey="name" 
+                                        tickLine={false} 
+                                        axisLine={false}
+                                        className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40"
+                                    />
+                                    <YAxis hide />
+                                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                                    <Bar 
+                                        dataKey="count" 
+                                        fill="var(--primary)" 
+                                        radius={[8, 8, 0, 0]}
+                                        barSize={40}
+                                        animationDuration={2000}
+                                    />
+                                </BarChart>
+                            </ChartContainer>
+                        </CardContent>
+                    </Card>
+                </div>
              </div>
         </TabsContent>
 
-        <TabsContent value="financials" className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <Card className="border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl rounded-2xl overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle className="text-lg font-black tracking-tight uppercase">Revenue Stream</CardTitle>
-                    <CardDescription className="text-[10px] font-bold uppercase tracking-widest opacity-40">Financial metrics from approved quotes</CardDescription>
-                </div>
-                <IndianRupee className="text-amber-500/40 h-8 w-8" />
-            </CardHeader>
-            <CardContent className="space-y-12 pb-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
+        <TabsContent value="financials" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+             <Card className="border-border/40 bg-card/40 backdrop-blur-2xl shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between py-10 px-10">
                     <div className="space-y-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Total Gross</span>
-                        <div className="flex items-center gap-4">
-                            <h3 className="text-5xl font-black tracking-tighter tabular-nums text-amber-500">
-                                {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(metrics.totalRevenue)}
-                            </h3>
-                            {renderTrendBadge(metrics.revenueChange || 0)}
+                        <CardTitle className="text-2xl font-bold tracking-tight uppercase">Revenue Stream Alpha</CardTitle>
+                        <CardDescription className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Tactical monetary intelligence</CardDescription>
+                    </div>
+                    <div className="size-16 rounded-3xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-2xl shadow-amber-500/20">
+                        <IndianRupee className="text-amber-500 size-8" />
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-16 pb-16 px-10">
+                    <div className="grid md:grid-cols-2 gap-12">
+                        <div className="space-y-4">
+                            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground/20">Unified Gross Assets</span>
+                            <div className="flex items-center gap-6">
+                                <h3 className="text-4xl font-bold tracking-tighter tabular-nums text-foreground">
+                                    {new Intl.NumberFormat(analytics.metrics.currency === "INR" ? "en-IN" : "en-LK", { 
+                                        style: "currency", 
+                                        currency: analytics.metrics.currency, 
+                                        maximumFractionDigits: 0,
+                                        currencyDisplay: "narrowSymbol"
+                                    }).format(analytics.metrics.totalRevenue)}
+                                </h3>
+                                <div className={`flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-full ${analytics.changes.revenue >= 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                                    <ArrowUpRight className="size-4" />
+                                    {Math.abs(analytics.changes.revenue).toFixed(1)}%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex flex-col justify-end space-y-4">
+                             <div className="h-2 w-full bg-muted/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-amber-500 w-[65%] rounded-full shadow-[0_0_20px_rgba(245,158,11,0.5)]" />
+                             </div>
+                             <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                                <span>Quarterly Target Progression</span>
+                                <span>65.0% Achieved</span>
+                             </div>
                         </div>
                     </div>
-                    <div className="flex flex-col justify-end">
-                         <div className="h-2 w-full bg-muted/20 rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-500 w-[65%] rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)]" />
-                         </div>
-                         <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40 mt-2 text-right">Target reaching: 65% of Q1 forecast</p>
+
+                    <div className="h-[400px] w-full bg-white/5 rounded-3xl border border-white/5 p-8 relative group">
+                        <ChartContainer config={chartConfig} className="h-full w-full">
+                            <AreaChart data={analytics.shipmentTrends} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorRevenueAlpha" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="var(--chart-4)" stopOpacity={0.2}/>
+                                        <stop offset="95%" stopColor="var(--chart-4)" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
+                                <XAxis 
+                                    dataKey="date" 
+                                    hide 
+                                />
+                                <YAxis hide />
+                                <ChartTooltip content={<ChartTooltipContent indicator="line" className="rounded-xl border-border/40 shadow-2xl font-bold" />} />
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="revenue" 
+                                    stroke="var(--chart-4)" 
+                                    strokeWidth={4} 
+                                    fillOpacity={1} 
+                                    fill="url(#colorRevenueAlpha)" 
+                                    animationDuration={3000}
+                                />
+                            </AreaChart>
+                        </ChartContainer>
+                        <div className="absolute inset-x-8 bottom-8 flex justify-between items-center pointer-events-none">
+                            <span className="text-[10px] font-black text-muted-foreground/10 uppercase tracking-[0.5em]">FINANCIAL_STREAM_XDR_04</span>
+                            <TrendingUp className="size-4 text-primary animate-pulse" />
+                        </div>
                     </div>
-                </div>
-                
-                <div className="px-2">
-                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                        <AreaChart 
-                            data={shipmentTrends}
-                            margin={{ left: 12, right: 12, top: 0, bottom: 0 }}
-                        >
-                            <defs>
-                                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="var(--chart-4)" stopOpacity={0.15}/>
-                                    <stop offset="95%" stopColor="var(--chart-4)" stopOpacity={0}/>
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                            <XAxis 
-                                dataKey="date" 
-                                fontSize={10} 
-                                tickLine={false} 
-                                axisLine={false} 
-                                tickMargin={12}
-                                className="font-bold uppercase tracking-widest text-muted-foreground/40"
-                            />
-                            <YAxis hide domain={['auto', 'auto']} />
-                            <ChartTooltip 
-                                indicator="dot"
-                                content={<ChartTooltipContent className="rounded-xl border-border/40 shadow-2xl font-bold" />} 
-                            />
-                            <Area 
-                                type="natural" 
-                                dataKey="revenue" 
-                                stroke="var(--chart-4)" 
-                                strokeWidth={3} 
-                                fillOpacity={1} 
-                                fill="url(#colorRevenue)" 
-                                connectNulls
-                                animationDuration={2500}
-                            />
-                        </AreaChart>
-                    </ChartContainer>
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+             </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Footer System Status */}
+      <div className="mt-12 py-8 border-t border-border/10 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/20 italic">
+            <span>UPLINK_01_ACTIVE</span>
+            <div className="size-1 rounded-full bg-primary" />
+            <span>ENCRYPTED_FEED</span>
+            <div className="size-1 rounded-full bg-primary" />
+            <span>GAVIN_OS_CORE</span>
+        </div>
+        <div className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/10 italic">
+            © 2026 GajanTrack Strategic Systems
+        </div>
+      </div>
     </div>
   );
 }

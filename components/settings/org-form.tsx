@@ -25,7 +25,7 @@ const orgFormSchema = z.object({
 type OrgFormValues = z.infer<typeof orgFormSchema>;
 
 export function OrgForm({ organization, sessionId }: { organization: any; sessionId?: string }) {
-  const updateOrg = useMutation(api.settings.updateOrgSettings);
+  const updateOrg = useMutation(api.organizations.mutations.updateOrgSettings);
 
   const form = useForm<OrgFormValues>({
     resolver: zodResolver(orgFormSchema),
@@ -175,3 +175,4 @@ export function OrgForm({ organization, sessionId }: { organization: any; sessio
     </Card>
   );
 }
+

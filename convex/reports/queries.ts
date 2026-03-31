@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
-import { requireOrgRole } from "./rbac";
+import { query } from "../_generated/server";
+import { requireOrgRole } from "../rbac";
 
 export const getReportData = query({
   args: {
@@ -30,8 +30,7 @@ export const getReportData = query({
             return true;
         });
 
-        // Enrich with carrier names for the report
-        const enriched = await Promise.all(filtered.map(async (s) => {
+        return await Promise.all(filtered.map(async (s) => {
             let carrier_name = s.carrier_code;
             if (s.provider === "track17" && !isNaN(Number(s.carrier_code))) {
                 const carrier = await ctx.db
@@ -47,8 +46,6 @@ export const getReportData = query({
                 last_synced_at_human: new Date(s.last_synced_at).toLocaleString(),
             };
         }));
-
-        return enriched;
     } else {
         let q = ctx.db
             .query("quotes")

@@ -13,14 +13,14 @@ import { Switch } from "@/components/ui/switch";
 import { Id } from "@/convex/_generated/dataModel";
 
 const notificationsFormSchema = z.object({
-  email: z.boolean().default(true),
-  whatsapp: z.boolean().default(false),
+  email: z.boolean(),
+  whatsapp: z.boolean(),
 });
 
 type NotificationsFormValues = z.infer<typeof notificationsFormSchema>;
 
 export function NotificationsForm({ organization, sessionId }: { organization: any; sessionId?: string }) {
-  const updateOrg = useMutation(api.settings.updateOrgSettings);
+  const updateOrg = useMutation(api.organizations.mutations.updateOrgSettings);
 
   const form = useForm<NotificationsFormValues>({
     resolver: zodResolver(notificationsFormSchema),
@@ -115,3 +115,4 @@ export function NotificationsForm({ organization, sessionId }: { organization: a
     </Card>
   );
 }
+

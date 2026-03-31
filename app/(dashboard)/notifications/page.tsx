@@ -34,19 +34,19 @@ export default function NotificationsPage() {
   const { sessionId, activeOrgId } = useOrg();
   const [activeTab, setActiveTab] = React.useState("active");
 
-  const activeNotifications = useQuery(api.admin_notifications.list, activeOrgId ? { 
+  const activeNotifications = useQuery(api.notifications.queries.list, activeOrgId ? { 
     orgId: activeOrgId, 
     sessionId 
   } : "skip");
 
-  const archivedNotifications = useQuery(api.admin_notifications.listArchived, activeOrgId ? { 
+  const archivedNotifications = useQuery(api.notifications.queries.listArchived, activeOrgId ? { 
     orgId: activeOrgId, 
     sessionId 
   } : "skip");
 
-  const markRead = useMutation(api.admin_notifications.markRead);
-  const archive = useMutation(api.admin_notifications.archive);
-  const deleteNotification = useMutation(api.admin_notifications.deleteNotification);
+  const markRead = useMutation(api.notifications.mutations.markRead);
+  const archive = useMutation(api.notifications.mutations.archive);
+  const deleteNotification = useMutation(api.notifications.mutations.deleteNotification);
 
   const notifications = activeTab === "active" ? activeNotifications : archivedNotifications;
 
@@ -247,3 +247,4 @@ function NotificationsList({
     </div>
   );
 }
+

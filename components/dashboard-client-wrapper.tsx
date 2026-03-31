@@ -7,6 +7,7 @@ import { api } from '@/convex/_generated/api';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SiteHeader } from '@/components/site-header';
+import { Footer } from '@/components/footer';
 import { useOrg } from "@/components/providers/org-provider";
 
 export function DashboardClientWrapper({ children }: { children: React.ReactNode }) {
@@ -22,7 +23,7 @@ export function DashboardClientWrapper({ children }: { children: React.ReactNode
 function DashboardInner({ children }: { children: React.ReactNode }) {
   const { isLoaded: isClerkLoaded, signOut } = useAuth();
   const { sessionId, isSyncing, isLoading: isOrgLoading } = useOrg();
-  const currentUser = useQuery(api.users.getCurrentUser, { sessionId });
+  const currentUser = useQuery(api.users.queries.getCurrentUser, { sessionId });
 
   const showSyncing = isSyncing || (isClerkLoaded && currentUser === null);
 
@@ -46,7 +47,10 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
             {children}
           </div>
         </main>
+        <Footer />
       </SidebarInset>
     </>
   );
 }
+
+

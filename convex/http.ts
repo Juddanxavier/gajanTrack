@@ -19,7 +19,7 @@ async function handleTrackingWebhook(ctx: any, result: TrackingResult | Tracking
         const results = Array.isArray(result) ? result : [result];
         
         for (const res of results) {
-            await ctx.runAction(api.shipments.refreshShipmentByData, {
+            await ctx.runAction(api.shipments.actions.refreshShipmentByData, {
                 tracking_number: res.tracking_number,
                 carrier_code: res.carrier_code,
                 status: res.status,
@@ -151,7 +151,7 @@ http.route({
         const phone = public_metadata?.phone as string | undefined;
         const orgId = public_metadata?.orgId as string | undefined;
 
-        await ctx.runMutation(api.users.syncUser, {
+        await ctx.runMutation(api.users.mutations.syncUser, {
           externalId: id,
           email,
           name: name || undefined,
@@ -166,7 +166,7 @@ http.route({
       case "user.deleted": {
         const { id } = evt.data;
         if (id) {
-          await ctx.runMutation(api.users.deleteUser, {
+          await ctx.runMutation(api.users.mutations.deleteUser, {
             externalId: id,
           });
         }

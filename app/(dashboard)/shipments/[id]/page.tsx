@@ -50,14 +50,13 @@ export default function ShipmentDetailsPage() {
   const { activeOrgId, sessionId } = useOrg();
   const shipmentId = params.id as Id<'shipments'>;
   
-  const shipmentData = useQuery(
-    api.shipments.getShipment, 
+  const shipment = useQuery(
+    api.shipments.queries.getShipment, 
     activeOrgId ? { id: shipmentId, orgId: activeOrgId, sessionId } : "skip"
   );
-  const shipment = shipmentData as any;
 
-  const refreshAction = useAction(api.shipments.refreshShipment);
-  const updateShipment = useMutation(api.shipments.updateShipment);
+  const refreshAction = useAction(api.shipments.actions.refreshShipment);
+  const updateShipment = useMutation(api.shipments.mutations.updateShipment);
   
   const [refreshing, setRefreshing] = React.useState(false);
   const [retrackOpen, setRetrackOpen] = React.useState(false);
@@ -65,7 +64,7 @@ export default function ShipmentDetailsPage() {
 
   const handlePreferenceToggle = async (channel: 'email' | 'whatsapp', enabled: boolean) => {
     try {
-      if (!activeOrgId) return;
+      if (!activeOrgId || !shipment) return;
       
       const currentPrefs = shipment.notification_preferences || { email: true, whatsapp: true };
       const newPrefs = { ...currentPrefs, [channel]: enabled };
@@ -124,7 +123,7 @@ export default function ShipmentDetailsPage() {
     'exception': 'in_transit',
   };
 
-  const effectiveStatus = statusToStepMap[shipment.status] || 'info_received';
+  const effectiveStatus = statusToStepMap[shipment.status || 'pending'] || 'info_received';
   const currentStatusIndex = steps.findIndex(step => step.key === effectiveStatus);
   const isDelivered = shipment.status === 'delivered';
   const hasException = shipment.status === 'exception' || shipment.status === 'failed_attempt';
@@ -193,14 +192,14 @@ export default function ShipmentDetailsPage() {
                         variant='outline' 
                         className={cn(
                             "px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider",
-                            statusColors[shipment.status] || ""
+                            statusColors[shipment.status || 'pending'] || ""
                         )}
                     >
-                        {formatStatus(shipment.status)}
+                        {formatStatus(shipment.status || 'pending')}
                     </Badge>
                     <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5" />
-                        Updated {format(shipment.updated_at || Date.now(), 'MMM d, HH:mm')}
+                        Updated {format(shipment.last_synced_at || shipment.created_at || Date.now(), 'MMM d, HH:mm')}
                     </span>
                 </div>
                 
@@ -213,7 +212,7 @@ export default function ShipmentDetailsPage() {
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={() => copyToClipboard(shipment.white_label_code || shipment.tracking_number)}
+                            onClick={() => copyToClipboard(shipment.white_label_code || shipment.tracking_number || "")}
                         >
                             <Copy className="h-4 w-4" />
                         </Button>
@@ -239,7 +238,7 @@ export default function ShipmentDetailsPage() {
                 <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest group-hover:text-primary transition-colors">Shipment QR Asset</p>
                 <Dialog open={qrOpen} onOpenChange={setQrOpen}>
                     <ShipmentQR 
-                        trackingNumber={shipment.white_label_code || shipment.tracking_number} 
+                        trackingNumber={shipment.white_label_code || shipment.tracking_number || ""} 
                         publicDomain={undefined} 
                         customerName={shipment.customer_name}
                     />
@@ -356,7 +355,7 @@ export default function ShipmentDetailsPage() {
                             </div>
                             <div className="space-y-0.5">
                                 <p className="text-sm font-semibold">{shipment.carrier_name || shipment.carrier_code || 'Pending'}</p>
-                                <p className="text-[10px] text-muted-foreground font-mono">ID: {shipment._id.substring(0, 8)}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono">ID: {shipment._id?.substring(0, 8)}</p>
                             </div>
                         </div>
                     </div>
@@ -420,7 +419,7 @@ export default function ShipmentDetailsPage() {
       </div>
 
       <RetrackDialog 
-        shipment={shipment}
+        shipment={shipment as any}
         open={retrackOpen}
         onOpenChange={setRetrackOpen}
       />

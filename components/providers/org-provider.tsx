@@ -38,12 +38,11 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     }
   }, [activeOrgId]);
   
-  const currentUser = useQuery(api.users.getCurrentUser, isSignedIn ? { sessionId } : "skip");
-  const organizationsData = useQuery(api.organizations.listOrganizations, isSignedIn ? { sessionId } : "skip") as Doc<"organizations">[] | undefined;
+  const currentUser = useQuery(api.users.queries.getCurrentUser, isSignedIn ? { sessionId } : "skip");
+  const organizationsData = useQuery(api.organizations.queries.listOrganizations, isSignedIn ? { sessionId } : "skip") as Doc<"organizations">[] | undefined;
   const sessionData = useQuery(api.sessions.getCurrentSession, isSignedIn ? { sessionId } : "skip");
   const touchSession = useMutation(api.sessions.touchSession);
-  const jitSync = useMutation(api.users.jitSync);
-  const ensureDefaultOrg = useMutation(api.users.ensureDefaultOrganization);
+  const ensureDefaultOrg = useMutation(api.users.mutations.ensureDefaultOrganization);
   
   const organizations = (organizationsData || []) as Doc<"organizations">[];
   
@@ -51,12 +50,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const isSyncing = isClerkLoaded && isSignedIn && currentUser === null;
   const isLoading = !isClerkLoaded || currentUser === undefined || organizationsData === undefined;
 
-  // JIT Sync: Create user record if missing but authenticated in Clerk
-  useEffect(() => {
-    if (isSyncing) {
-      jitSync().catch(err => console.error("[OrgProvider] Sync failed:", err));
-    }
-  }, [isSyncing, jitSync, sessionId]);
+  // JIT Sync logic removed as user synchronization is handled by Clerk webhooks.
 
   // Sync session on mount and when org changes
   useEffect(() => {
@@ -77,12 +71,12 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       // This allows Admins to switch organizations without being reset
       if (!activeOrgId) {
         if (currentUser.orgId) {
-          setActiveOrgId(currentUser.orgId);
+          setActiveOrgId(currentUser.orgId as any);
         } else if (currentUser.role === "admin") {
           // Force ensure a default org for admins if they have none
           ensureDefaultOrg({ sessionId }).then(res => {
             if (res?.orgId) {
-              setActiveOrgId(res.orgId);
+              setActiveOrgId(res.orgId as any);
               toast.success(`Organization Ready: ${res.name}`);
             }
           }).catch(err => {
@@ -121,3 +115,4 @@ export function useOrg() {
   }
   return context;
 }
+

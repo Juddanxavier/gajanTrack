@@ -9,21 +9,20 @@ export const performRetentionCleanup = internalMutation({
     const toDelete = await ctx.db
       .query("quotes")
       .withIndex("by_deletion_time", (q) => q.lt("deletionTime", now))
-      .collect();
+      .take(100);
     
     for (const quote of toDelete) {
       await ctx.db.delete(quote._id);
     }
 
     // 2. Cleanup Archived Quotes (24 months)
-    // 24 months ~= 24 * 30 * 24 * 60 * 60 * 1000
     const TWENTY_FOUR_MONTHS = 24 * 30 * 24 * 60 * 60 * 1000;
     const archiveCutoff = now - TWENTY_FOUR_MONTHS;
     
     const toPurgeFromArchive = await ctx.db
       .query("quotes")
       .withIndex("by_archived_time", (q) => q.lt("archivedTime", archiveCutoff))
-      .collect();
+      .take(100);
     
     for (const quote of toPurgeFromArchive) {
       await ctx.db.delete(quote._id);
@@ -41,7 +40,7 @@ export const performRetentionCleanup = internalMutation({
       .query("admin_notifications")
       .withIndex("by_createdAt", (q) => q.lt("createdAt", archiveThreshold))
       .filter((q) => q.eq(q.field("archivedAt"), undefined))
-      .collect();
+      .take(100);
 
     for (const n of toArchive) {
       await ctx.db.patch(n._id, { archivedAt: now });
@@ -51,13 +50,15 @@ export const performRetentionCleanup = internalMutation({
     const toDeleteFinal = await ctx.db
       .query("admin_notifications")
       .withIndex("by_archivedAt", (q) => q.lt("archivedAt", deleteThreshold))
-      .collect();
+      .take(100);
 
     for (const n of toDeleteFinal) {
       await ctx.db.delete(n._id);
     }
 
-    console.log(`Retention Cleanup: Purged ${toDelete.length} deleted and ${toPurgeFromArchive.length} archived records.`);
-    console.log(`Notification Cleanup: Archived ${toArchive.length} and Deleted ${toDeleteFinal.length} notifications.`);
+    if (toDelete.length > 0 || toPurgeFromArchive.length > 0 || toArchive.length > 0 || toDeleteFinal.length > 0) {
+        console.log(`[RETENTION] Quotes: Purged ${toDelete.length} deleted, ${toPurgeFromArchive.length} archived.`);
+        console.log(`[RETENTION] Notifications: Archived ${toArchive.length}, Deleted ${toDeleteFinal.length}.`);
+    }
   },
 });

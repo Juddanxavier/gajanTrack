@@ -14,7 +14,7 @@ import { User, Building2, Bell, Palette } from "lucide-react";
 
 export default function SettingsPage() {
   const { sessionId, session, isLoading: isOrgLoading } = useOrg();
-  const settings = useQuery(api.settings.getSettings, 
+  const settings = useQuery(api.organizations.queries.getSettings, 
     (sessionId && session) ? { sessionId } : "skip"
   );
 
@@ -108,3 +108,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

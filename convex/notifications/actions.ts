@@ -13,7 +13,7 @@ export const sendStatusUpdate = internalAction({
   },
   handler: async (ctx, args): Promise<void> => {
     // 1. Fetch shipment data (with internal query to bypass RBAC if needed)
-    const shipment = (await ctx.runQuery(internal.shipments.getShipmentInternal, { id: args.id })) as any;
+    const shipment = (await ctx.runQuery(internal.shipments.internal.internalGetShipment, { id: args.id })) as any;
     
     if (!shipment) {
       console.error(`[NotificationAction] Shipment ${args.id} not found`);
@@ -39,7 +39,7 @@ export const testNotification = action({
         status: v.optional(v.string())
     },
     handler: async (ctx, args): Promise<{ success: boolean; message: string }> => {
-        const shipment = (await ctx.runQuery(internal.shipments.getShipmentInternal, { id: args.id })) as any;
+        const shipment = (await ctx.runQuery(internal.shipments.internal.internalGetShipment, { id: args.id })) as any;
         if (!shipment) throw new Error("Shipment not found");
 
         console.log(`[TEST] Manually triggering notification for ${shipment.tracking_number} (Status: ${args.status || 'test_sync'})`);

@@ -68,8 +68,8 @@ export function ShipmentsDataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const archiveShipment = useMutation(api.shipments.archiveShipment);
-  const refreshShipment = useAction(api.shipments.refreshShipment);
+  const archiveShipment = useMutation(api.shipments.mutations.archiveShipment);
+  const refreshShipment = useAction(api.shipments.actions.refreshShipment);
 
   const table = useReactTable({
     data,
@@ -117,7 +117,7 @@ export function ShipmentsDataTable<TData, TValue>({
     table.resetRowSelection();
   };
 
-  const deleteShipment = useMutation(api.shipments.deleteShipment);
+  const deleteShipment = useMutation(api.shipments.mutations.deleteShipment);
 
   const handleBulkDelete = async () => {
     if (!activeOrgId) return;
@@ -371,3 +371,4 @@ export function ShipmentsDataTable<TData, TValue>({
     </div>
   );
 }
+

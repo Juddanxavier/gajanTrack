@@ -92,3 +92,4 @@ export function EfficiencyRadial() {
     </Card>
   )
 }
+

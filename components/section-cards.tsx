@@ -130,3 +130,4 @@ export function SectionCards({ data, currency = "INR" }: SectionCardsProps) {
     </div>
   )
 }
+

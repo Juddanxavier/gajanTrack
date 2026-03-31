@@ -46,10 +46,10 @@ export default function Home() {
   const { activeOrgId, sessionId } = useOrg();
   const [timeRange, setTimeRange] = React.useState<"7d" | "30d" | "90d" | "all">("30d");
   
-  const analytics = useQuery(api.analytics.getAnalytics, 
+  const analytics = useQuery(api.analytics.queries.getAnalytics, 
     activeOrgId ? { orgId: activeOrgId, sessionId, timeRange } : "skip"
   );
-  const recentQuotes = useQuery(api.quotes.getRecentQuotes, 
+  const recentQuotes = useQuery(api.quotes.queries.getRecentQuotes, 
     activeOrgId ? { orgId: activeOrgId, sessionId } : "skip"
   );
 
@@ -159,8 +159,8 @@ export default function Home() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-border/40">
-              {recentQuotes?.map((quote) => {
-                const q = quote as any;
+              {recentQuotes?.map((quote: any) => {
+                const q = quote;
                 const initials = q._id.slice(-2).toUpperCase();
                 return (
                   <div key={q._id} className="group flex items-center gap-4 p-4 transition-colors hover:bg-white/5">
@@ -210,3 +210,4 @@ export default function Home() {
     </div>
   );
 }
+

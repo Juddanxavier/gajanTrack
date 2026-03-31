@@ -57,16 +57,18 @@ export function RetrackDialog({ shipment, open, onOpenChange }: RetrackDialogPro
     limit: 10
   });
 
-  const retrack = useAction(api.shipments.retrackShipment);
+  const retrack = useAction(api.shipments.actions.retrackShipment);
 
   const handleRetrack = async () => {
     if (!orgId) return;
     setIsSubmitting(true);
     
     const promise = retrack({
-      shipment_id: shipment._id,
+      id: shipment._id,
       orgId,
-      carrier_code: selectedCarrier ? String(selectedCarrier.key) : undefined,
+      tracking_number: shipment.tracking_number,
+      carrier_code: selectedCarrier ? String(selectedCarrier.key) : shipment.carrier_code || "auto",
+      provider: shipment.provider as any,
       sessionId,
     });
 
@@ -133,7 +135,7 @@ export function RetrackDialog({ shipment, open, onOpenChange }: RetrackDialogPro
                   <CommandList>
                     <CommandEmpty>No carrier found.</CommandEmpty>
                     <CommandGroup>
-                      {carrierResults?.map((carrier) => (
+                      {carrierResults?.map((carrier: any) => (
                         <CommandItem
                           key={carrier.key}
                           value={carrier.name}
@@ -179,3 +181,4 @@ export function RetrackDialog({ shipment, open, onOpenChange }: RetrackDialogPro
     </Dialog>
   );
 }
+

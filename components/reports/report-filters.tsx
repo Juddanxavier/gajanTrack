@@ -179,3 +179,4 @@ export function ReportFilters({ onFiltersChange, reportType, setReportType }: Re
     </div>
   );
 }
+

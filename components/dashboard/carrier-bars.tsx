@@ -78,3 +78,4 @@ export function CarrierBars({ data }: CarrierBarsProps) {
     </Card>
   )
 }
+

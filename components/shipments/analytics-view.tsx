@@ -14,12 +14,12 @@ import { Loader2, TrendingUp, Package, Globe, Truck } from 'lucide-react';
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 interface AnalyticsViewProps {
-  orgId: Id<"organizations">;
+  orgId: string;
   sessionId?: string;
 }
 
 export function AnalyticsView({ orgId, sessionId }: AnalyticsViewProps) {
-  const analytics = useQuery(api.shipments.getDetailedAnalytics, { orgId, sessionId });
+  const analytics = useQuery(api.shipments.queries.getDetailedAnalytics, { orgId, sessionId });
 
   if (analytics === undefined) {
     return (
@@ -126,7 +126,7 @@ export function AnalyticsView({ orgId, sessionId }: AnalyticsViewProps) {
                   strokeWidth={2}
                   stroke="rgba(0,0,0,0.2)"
                 >
-                  {carrierData.map((entry, index) => (
+                  {carrierData.map((entry: any, index: number) => (
                     <Cell 
                         key={`cell-${index}`} 
                         fill={[`var(--primary)`, `var(--chart-2)`, `var(--chart-3)`, `var(--chart-4)`, `var(--chart-1)`][index % 5]} 
@@ -181,3 +181,4 @@ export function AnalyticsView({ orgId, sessionId }: AnalyticsViewProps) {
     </div>
   );
 }
+

@@ -1,16 +1,14 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { Doc, Id } from "./_generated/dataModel";
-import { requireUser, requireAdmin, requireOrgMember, requireOrgRole } from "./rbac";
+import { query } from "../_generated/server";
+import { Doc, Id } from "../_generated/dataModel";
+import { requireOrgMember, requireOrgRole } from "../rbac";
 
 /**
- * Securing Quotes Backend (Multi-Tenancy)
+ * List all quotes for an organization.
  */
-
 export const listQuotes = query({
   args: { orgId: v.union(v.id("organizations"), v.string()), sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    // Ensure user has access to this organization
     await requireOrgMember(ctx, args.orgId, args.sessionId);
 
     return await ctx.db
@@ -23,6 +21,9 @@ export const listQuotes = query({
   },
 });
 
+/**
+ * Get recent quotes for the dashboard.
+ */
 export const getRecentQuotes = query({
   args: { orgId: v.union(v.id("organizations"), v.string()), sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -37,6 +38,9 @@ export const getRecentQuotes = query({
   },
 });
 
+/**
+ * Get a single quote by ID.
+ */
 export const getQuote = query({
   args: { id: v.id("quotes"), orgId: v.union(v.id("organizations"), v.string()), sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -49,76 +53,9 @@ export const getQuote = query({
   },
 });
 
-export const createQuote = mutation({
-  args: {
-    orgId: v.union(v.id("organizations"), v.string()),
-    customerId: v.string(),
-    origin: v.object({
-      address: v.string(),
-      city: v.string(),
-    }),
-    destination: v.object({
-      address: v.string(),
-      city: v.string(),
-    }),
-    parcelDetails: v.object({
-      weightKg: v.number(),
-      description: v.string(),
-    }),
-    sessionId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    await requireOrgMember(ctx, args.orgId, args.sessionId);
-    const quoteId = await ctx.db.insert("quotes", {
-      ...args,
-      status: "pending",
-      createdAt: Date.now(),
-    });
-
-    // Notify admins/staff about new quote request
-    await ctx.db.insert("admin_notifications", {
-      orgId: args.orgId,
-      type: "quote_created",
-      title: "New Quote Request",
-      message: `A new quote request has been submitted for ${args.origin.city} to ${args.destination.city}.`,
-      link: `/quotes`,
-      isRead: false,
-      priority: "high",
-      createdAt: Date.now(),
-    });
-
-    return quoteId;
-  },
-});
-
-export const updateQuoteStatus = mutation({
-  args: {
-    id: v.id("quotes"),
-    orgId: v.union(v.id("organizations"), v.string()),
-    status: v.union(
-      v.literal("pending"), 
-      v.literal("reviewing"), 
-      v.literal("approved"), 
-      v.literal("rejected")
-    ),
-    staffNotes: v.optional(v.string()),
-    estimatedPrice: v.optional(v.number()),
-    sessionId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    // Only admins or staff for this org can update quote status/prices
-    await requireOrgRole(ctx, args.orgId, args.sessionId);
-    
-    const quote = await ctx.db.get(args.id);
-    if (!quote || quote.orgId !== args.orgId) {
-      throw new Error("Quote not found or access denied");
-    }
-
-    const { id, orgId, ...updates } = args;
-    await ctx.db.patch(id, updates);
-  },
-});
-
+/**
+ * Get administrative statistics for quotes.
+ */
 export const getAdminStats = query({
   args: { orgId: v.union(v.id("organizations"), v.string()), sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
@@ -141,7 +78,6 @@ export const getAdminStats = query({
         .filter((q) => q.eq(q.field("deletionTime"), undefined))
         .filter((q) => q.eq(q.field("archivedTime"), undefined))
         .collect();
-      
       
       const now = Date.now();
       const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -205,52 +141,5 @@ export const getAdminStats = query({
         success: false
       };
     }
-  },
-});
-
-
-export const archiveQuote = mutation({
-  args: { id: v.id("quotes"), orgId: v.union(v.id("organizations"), v.string()), sessionId: v.optional(v.string()) },
-  handler: async (ctx, args) => {
-    await requireOrgRole(ctx, args.orgId, args.sessionId);
-    const quote = await ctx.db.get(args.id);
-    if (!quote || quote.orgId !== args.orgId) {
-      throw new Error("Quote not found or access denied");
-    }
-
-    await ctx.db.patch(args.id, {
-      archivedTime: Date.now(),
-    });
-  },
-});
-
-export const softDeleteQuote = mutation({
-  args: { id: v.id("quotes"), orgId: v.union(v.id("organizations"), v.string()), sessionId: v.optional(v.string()) },
-  handler: async (ctx, args) => {
-    await requireOrgRole(ctx, args.orgId, args.sessionId);
-    const quote = await ctx.db.get(args.id);
-    if (!quote || quote.orgId !== args.orgId) {
-      throw new Error("Quote not found or access denied");
-    }
-
-    await ctx.db.patch(args.id, {
-      deletionTime: Date.now() + (30 * 24 * 60 * 60 * 1000), // 30 days retention
-    });
-  },
-});
-
-export const restoreQuote = mutation({
-  args: { id: v.id("quotes"), orgId: v.union(v.id("organizations"), v.string()), sessionId: v.optional(v.string()) },
-  handler: async (ctx, args) => {
-    await requireOrgRole(ctx, args.orgId, args.sessionId);
-    const quote = await ctx.db.get(args.id);
-    if (!quote || quote.orgId !== args.orgId) {
-      throw new Error("Quote not found or access denied");
-    }
-
-    await ctx.db.patch(args.id, {
-      deletionTime: undefined,
-      archivedTime: undefined,
-    });
   },
 });

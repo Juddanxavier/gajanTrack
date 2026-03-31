@@ -14,13 +14,13 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 
 interface ShipmentStatsProps {
-  orgId: Id<"organizations">;
+  orgId: string;
   userId?: string;
   sessionId?: string;
 }
 
 export function ShipmentStats({ orgId, userId, sessionId }: ShipmentStatsProps) {
-  const stats = useQuery(api.shipments.getShipmentStats, { 
+  const stats = useQuery(api.shipments.queries.getShipmentStats, { 
     orgId, 
     userId: userId || undefined, 
     sessionId: sessionId || undefined 
@@ -112,3 +112,4 @@ export function ShipmentStats({ orgId, userId, sessionId }: ShipmentStatsProps) 
     </div>
   )
 }
+

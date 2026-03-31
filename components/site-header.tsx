@@ -21,10 +21,11 @@ export function SiteHeader() {
         <div className='flex items-center gap-4'>
            <div className="flex items-center gap-2 pr-4 border-r border-border/40">
              <div className="h-6 w-1 bg-primary rounded-full" />
-             <h1 className='text-lg font-semibold tracking-tight text-foreground text-xs uppercase opacity-70'>Kajen Track</h1>
+             <h1 className='text-lg font-semibold tracking-tight text-foreground text-xs uppercase opacity-70'>{process.env.NEXT_PUBLIC_APP_NAME || 'GT Express'}</h1>
            </div>
            <OrgSwitcher />
         </div>
+
         
         <div className='ml-auto flex items-center gap-3'>
           <NotificationBell />
@@ -36,3 +37,4 @@ export function SiteHeader() {
     </header>
   );
 }
+

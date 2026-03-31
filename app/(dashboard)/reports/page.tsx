@@ -4,7 +4,7 @@ import * as React from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useOrg } from "@/components/providers/org-provider";
-import { useCurrentUser } from "@/lib/auth/client";
+// Removed useCurrentUser since we need the database user role
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ReportFilters } from "@/components/reports/report-filters";
@@ -18,7 +18,8 @@ import {
 
 export default function ReportsPage() {
   const { activeOrgId, sessionId } = useOrg();
-  const { isLoaded: isAuthLoaded, user: currentUser } = useCurrentUser();
+  const currentUser = useQuery(api.users.queries.getCurrentUser, { sessionId });
+  const isAuthLoaded = currentUser !== undefined;
   const [reportType, setReportType] = React.useState<"shipments" | "quotes">("shipments");
   const [filters, setFilters] = React.useState<any>({
     startDate: Date.now() - 30 * 24 * 60 * 60 * 1000,
@@ -26,7 +27,7 @@ export default function ReportsPage() {
   });
 
   const reportData = useQuery(
-    api.reports.getReportData,
+    api.reports.queries.getReportData,
     activeOrgId ? { 
       orgId: activeOrgId, 
       sessionId, 
@@ -149,3 +150,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+

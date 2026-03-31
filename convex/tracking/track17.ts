@@ -37,7 +37,8 @@ export class Track17Provider implements ITrackingProvider {
     // 17track returns 0 for success in their custom code field
     if (!response.ok || (data.code !== 0)) {
         console.error(`[Track17Provider] API Error:`, data);
-        throw new Error(`17track API error: ${data.msg || data.message || response.statusText} (Code: ${data.code})`);
+        const errorMsg = data.msg || data.message || response.statusText;
+        throw new Error(`1track API error: ${errorMsg} (Code: ${data.code})`);
     }
     return data;
   }

@@ -36,12 +36,14 @@ export function ChartAreaInteractive({
   data, 
   title = "Operational Velocity", 
   description = "Real-time shipment telemetry across the network",
-  isLoading = false
+  isLoading = false,
+  sparkline = false
 }: { 
   data: any[], 
   title?: string, 
   description?: string,
-  isLoading?: boolean
+  isLoading?: boolean,
+  sparkline?: boolean
 }) {
   return (
     <Card className="border-border/40 bg-card/40 backdrop-blur-2xl shadow-xl rounded-2xl overflow-hidden">
@@ -66,14 +68,14 @@ export function ChartAreaInteractive({
         </div>
       </CardHeader>
 
-      <CardContent className="pt-4 px-4 pb-4">
+      <CardContent className={`pt-4 ${sparkline ? 'px-0 pb-0' : 'px-4 pb-4'}`}>
         <ChartContainer
           config={chartConfig}
-          className="h-[300px] w-full"
+          className={`${sparkline ? 'h-[350px]' : 'h-[300px]'} w-full`}
         >
           <AreaChart 
             data={data}
-            margin={{
+            margin={sparkline ? { left: 0, right: 0, top: 0, bottom: 0 } : {
               left: 12,
               right: 12,
               top: 10,
@@ -94,8 +96,8 @@ export function ChartAreaInteractive({
                 <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis
+            {!sparkline && <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />}
+            {!sparkline && <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
@@ -109,13 +111,13 @@ export function ChartAreaInteractive({
                 })
               }}
               className="text-[10px] font-mono font-bold uppercase tracking-tighter opacity-40"
-            />
+            />}
             <YAxis 
                hide 
                domain={['auto', 'auto']}
             />
             <ChartTooltip
-              cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+              cursor={sparkline ? { stroke: 'var(--primary)', strokeWidth: 1, strokeDasharray: '4 4' } : { stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
               content={
                 <ChartTooltipContent
                   indicator="dot"
@@ -128,7 +130,7 @@ export function ChartAreaInteractive({
               type="natural"
               fill="url(#fillTotal)"
               stroke="var(--primary)"
-              strokeWidth={3}
+              strokeWidth={sparkline ? 4 : 3}
               dot={false}
               activeDot={{ r: 4, fill: "var(--primary)", stroke: "white", strokeWidth: 1 }}
               connectNulls
@@ -139,7 +141,7 @@ export function ChartAreaInteractive({
               type="natural"
               fill="url(#fillDelivered)"
               stroke="var(--chart-2)"
-              strokeWidth={2}
+              strokeWidth={sparkline ? 3 : 2}
               dot={false}
               activeDot={{ r: 4, fill: "var(--chart-2)", stroke: "white", strokeWidth: 1 }}
               connectNulls
@@ -163,3 +165,4 @@ export function ChartAreaInteractive({
     </Card>
   )
 }
+

@@ -63,9 +63,9 @@ const formSchema = z.object({
   customer_phone: z.string().optional(),
   origin_country: z.string().min(1, 'Origin country is required'),
   provider: z.union([z.literal("trackingmore"), z.literal("track123"), z.literal("track17")]),
-  live_track: z.boolean().default(true),
-  email_notify: z.boolean().default(true),
-  whatsapp_notify: z.boolean().default(true),
+  live_track: z.boolean(),
+  email_notify: z.boolean(),
+  whatsapp_notify: z.boolean(),
 });
 
 interface AddShipmentDialogProps {
@@ -92,7 +92,7 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
     limit: 20
   });
 
-  const addAndTrack = useAction(api.shipments.addAndTrackShipment);
+  const addAndTrack = useAction(api.shipments.actions.addAndTrackShipment);
 
   const defaultCountry = 'india';
 
@@ -130,25 +130,25 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
     return () => clearTimeout(timer);
   }, [watchEmail, watchPhone]);
 
-  const foundCustomer = useQuery(api.users.findCustomerByContact, 
-    orgId && debouncedContact.length >= 3 
-      ? { contact: debouncedContact, orgId, sessionId } 
-      : "skip"
+  const foundCustomer = useQuery(api.users.queries.findCustomerByContact, 
+    debouncedContact.length >= 3 ? { contact: debouncedContact, orgId: orgId || "", sessionId } : "skip"
   );
 
   // Debounced Duplicate Tracking Check
-  const [debouncedTrackingCheck, setDebouncedTrackingCheck] = React.useState("");
+  const [debouncedTracking, setDebouncedTracking] = React.useState("");
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedTrackingCheck(watchTrackingNumber?.trim() || "");
+      setDebouncedTracking(watchTrackingNumber?.trim() || "");
     }, 500);
     return () => clearTimeout(timer);
   }, [watchTrackingNumber]);
 
-  const isDuplicate = useQuery(api.shipments.checkTrackingExists, 
-    orgId && debouncedTrackingCheck.length >= 5 
-      ? { tracking_number: debouncedTrackingCheck, orgId, sessionId } 
-      : "skip"
+  const isDuplicate = useQuery(api.shipments.queries.checkTrackingExists, 
+    (debouncedTracking.length >= 5 && orgId) ? { 
+        tracking_number: debouncedTracking, 
+        orgId: orgId,
+        sessionId 
+    } : "skip"
   );
 
   console.log(`[DEBUG] AddShipmentDialog - foundCustomer:`, foundCustomer);
@@ -159,7 +159,7 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
   React.useEffect(() => {
     if (foundCustomer) {
       if (foundCustomer.isUser) {
-        setDetectedUserId(foundCustomer.externalId);
+        setDetectedUserId((foundCustomer as any).externalId);
       } else {
         setDetectedUserId(undefined);
       }
@@ -194,7 +194,7 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
     }
   }, [foundCustomer, form, detectedUserId]);
 
-  const detectCarrier = useAction(api.shipments.detectCarrierAction);
+  const detectCarrier = useAction(api.shipments.actions.detectCarrierAction);
 
   // Debounced server-side auto-detect carrier
   React.useEffect(() => {
@@ -257,7 +257,7 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
     }
   }, [activeOrg, form]);
 
-  const addManual = useMutation(api.shipments.createShipmentManual);
+  const addManual = useMutation(api.shipments.mutations.createShipmentManual);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -428,7 +428,7 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
                                 ) : (
                                   field.value ? (
                                     form.watch("provider") === "track17"
-                                      ? (carrierResults?.find(c => c.key.toString() === field.value)?.name || detectedCarrierName || field.value)
+                                      ? (carrierResults?.find((c: any) => c.key.toString() === field.value)?.name || detectedCarrierName || field.value)
                                       : (couriersData.find((c) => c.code.toLowerCase() === field.value?.toLowerCase())?.name || field.value)
                                   ) : "Auto-detect..."
                                 )}
@@ -451,7 +451,7 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
                               <CommandGroup>
                                 {form.watch("provider") === "track17" ? (
                                   <>
-                                    {carrierResults?.map((carrier) => (
+                                    {carrierResults?.map((carrier: any) => (
                                       <CommandItem
                                         value={`${carrier.key} ${carrier.name}`}
                                         key={carrier.key}
@@ -477,7 +477,7 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
                                   </>
                                 ) : (
                                   <>
-                                    {couriersData.map((courier) => (
+                                    {couriersData.map((courier: any) => (
                                       <CommandItem
                                         value={`${courier.code} ${courier.name}`}
                                         key={courier.code}
@@ -652,3 +652,4 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
     </Dialog>
   );
 }
+

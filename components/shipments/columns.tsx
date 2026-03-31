@@ -45,14 +45,14 @@ import { CopyButton } from "@/components/copy-button";
 
 const ActionCell = ({ shipment }: { shipment: Doc<"shipments"> }) => {
   const { activeOrgId, sessionId } = useOrg();
-  const archive = useMutation(api.shipments.archiveShipment);
-  const unarchive = useMutation(api.shipments.unarchiveShipment);
-  const deleteShipment = useMutation(api.shipments.deleteShipment);
+  const archive = useMutation(api.shipments.mutations.archiveShipment);
+  const unarchive = useMutation(api.shipments.mutations.unarchiveShipment);
+  const deleteShipment = useMutation(api.shipments.mutations.deleteShipment);
   const [loading, setLoading] = React.useState(false);
   const [retrackOpen, setRetrackOpen] = React.useState(false);
   const [qrOpen, setQrOpen] = React.useState(false);
 
-  const org = useQuery(api.organizations.getOrganization, 
+  const org = useQuery(api.organizations.queries.getOrganization, 
     activeOrgId ? { id: activeOrgId, sessionId } : "skip"
   );
 
@@ -171,7 +171,7 @@ const ActionCell = ({ shipment }: { shipment: Doc<"shipments"> }) => {
   );
 };
 
-export const columns: ColumnDef<Doc<"shipments">>[] = [
+export const columns: ColumnDef<any>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -368,3 +368,4 @@ export const columns: ColumnDef<Doc<"shipments">>[] = [
     cell: ({ row }) => <ActionCell shipment={row.original} />,
   },
 ];
+

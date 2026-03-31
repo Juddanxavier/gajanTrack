@@ -183,3 +183,4 @@ export function ReportTable({ data, type, isLoading }: ReportTableProps) {
     </div>
   );
 }
+

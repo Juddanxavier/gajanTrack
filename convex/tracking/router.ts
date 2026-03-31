@@ -40,7 +40,7 @@ export class TrackingAdapter {
         lastError = error;
       }
     }
-    throw lastError || new Error("All tracking providers failed to add tracking");
+    throw lastError || new Error(`No tracking provider could initialize tracking for number: ${trackingNumber}`);
   }
 
   async refreshTracking(trackingNumber: string, carrierCode: string, providerName: "trackingmore" | "track123" | "track17"): Promise<TrackingResult> {

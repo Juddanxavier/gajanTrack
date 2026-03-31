@@ -15,12 +15,12 @@ export default function QuotesPage() {
   const { activeOrgId, sessionId } = useOrg();
 
   const quotes = useQuery(
-    api.quotes.listQuotes,
+    api.quotes.queries.listQuotes,
     activeOrgId ? { orgId: activeOrgId, sessionId } : 'skip'
   );
 
   const stats = useQuery(
-    api.quotes.getAdminStats,
+    api.quotes.queries.getAdminStats,
     activeOrgId ? { orgId: activeOrgId, sessionId } : 'skip'
   );
 
@@ -106,3 +106,4 @@ export default function QuotesPage() {
     </div>
   );
 }
+

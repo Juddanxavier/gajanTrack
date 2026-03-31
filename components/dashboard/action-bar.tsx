@@ -22,18 +22,26 @@ interface ActionBarProps {
   timeRange: "7d" | "30d" | "90d" | "all"
   setTimeRange: (value: "7d" | "30d" | "90d" | "all") => void
   onRefresh?: () => void
+  title?: string
+  subtitle?: string
 }
 
-export function ActionBar({ timeRange, setTimeRange, onRefresh }: ActionBarProps) {
+export function ActionBar({ 
+  timeRange, 
+  setTimeRange, 
+  onRefresh,
+  title = "Operational Overview",
+  subtitle
+}: ActionBarProps) {
   return (
     <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 mb-2 bg-card/40 backdrop-blur-3xl border border-border/40 rounded-2xl shadow-xl shadow-primary/5 transition-all duration-300">
       {/* Title Section */}
       <div className="space-y-0.5">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Operational Overview
+        <h1 className="text-2xl font-bold tracking-tight text-foreground uppercase">
+          {title}
         </h1>
-        <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/40">
-          Real-time intelligence • {timeRange.toUpperCase()} cycle
+        <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/40">
+          {subtitle || `Real-time intelligence • ${timeRange.toUpperCase()} cycle`}
         </p>
       </div>
 
@@ -102,3 +110,4 @@ export function ActionBar({ timeRange, setTimeRange, onRefresh }: ActionBarProps
     </div>
   )
 }
+

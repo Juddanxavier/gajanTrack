@@ -19,10 +19,10 @@ import {
 
 export default function UsersPage() {
   const { sessionId } = useOrg();
-  const currentUser = useQuery(api.users.getCurrentUser, { sessionId });
-  const users = useQuery(api.users.listUsers, { sessionId });
-  const userStats = useQuery(api.users.getUserStats, { sessionId });
-  const organizations = useQuery(api.organizations.listOrganizations, { sessionId });
+  const currentUser = useQuery(api.users.queries.getCurrentUser, { sessionId });
+  const users = useQuery(api.users.queries.listUsers, { sessionId });
+  const userStats = useQuery(api.users.queries.getUserStats, { sessionId });
+  const organizations = useQuery(api.organizations.queries.listOrganizations, { sessionId });
 
   if (!currentUser) return null;
 
@@ -34,7 +34,7 @@ export default function UsersPage() {
   // Create an org map for easy name resolution
   const orgMap = React.useMemo(() => {
     const map: Record<string, string> = {};
-    organizations?.forEach(org => {
+    organizations?.forEach((org: any) => {
       map[org._id] = org.name;
     });
     return map;
@@ -159,3 +159,4 @@ function StatCard({ title, value, icon, description, chart, color }: {
     </Card>
   );
 }
+

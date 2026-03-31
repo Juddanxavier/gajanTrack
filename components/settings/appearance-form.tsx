@@ -23,7 +23,7 @@ type AppearanceFormValues = z.infer<typeof appearanceFormSchema>;
 
 export function AppearanceForm({ initialData, sessionId }: { initialData: any, sessionId?: string }) {
   const { setTheme } = useTheme();
-  const updatePreferences = useMutation(api.settings.updateUserSettings);
+  const updatePreferences = useMutation(api.users.mutations.updateUserSettings);
 
   const form = useForm<AppearanceFormValues>({
     resolver: zodResolver(appearanceFormSchema),
@@ -144,3 +144,4 @@ export function AppearanceForm({ initialData, sessionId }: { initialData: any, s
     </Card>
   );
 }
+

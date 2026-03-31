@@ -172,3 +172,4 @@ export function ShipmentQR({ trackingNumber, publicDomain, customerName }: Shipm
     </DialogContent>
   );
 }
+

@@ -341,3 +341,4 @@ export function UserList({ users, currentUser, orgMap }: UserListProps) {
     </div>
   );
 }
+

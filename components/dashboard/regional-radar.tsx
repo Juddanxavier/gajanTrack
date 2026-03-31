@@ -95,3 +95,4 @@ export function RegionalRadar({ data }: RegionalRadarProps) {
     </Card>
   )
 }
+

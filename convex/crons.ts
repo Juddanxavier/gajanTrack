@@ -18,21 +18,27 @@ crons.daily(
 crons.interval(
   "sync-active-shipments",
   { minutes: 30 },
-  internal.shipments.syncActiveShipments,
+  internal.shipments.internal.syncActiveShipments,
 );
 
 
 crons.daily(
   "shipment-archiving",
   { hourUTC: 1, minuteUTC: 0 },
-  internal.shipments.processShipmentArchiving,
+  internal.shipments.internal.processShipmentArchiving,
 );
 
 
 crons.daily(
   "archived-shipment-cleanup",
   { hourUTC: 2, minuteUTC: 0 },
-  internal.shipments.cleanupArchivedShipments,
+  internal.shipments.internal.cleanupArchivedShipments,
+);
+
+crons.daily(
+  "webhook-log-cleanup",
+  { hourUTC: 3, minuteUTC: 0 },
+  internal.webhook_logs.cleanupWebhookLogs,
 );
 
 export default crons;

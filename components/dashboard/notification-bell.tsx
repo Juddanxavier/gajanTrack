@@ -23,15 +23,15 @@ import Link from "next/link";
 export function NotificationBell() {
   const { sessionId, activeOrgId } = useOrg();
   
-  const notifications = useQuery(api.admin_notifications.list, activeOrgId ? { 
+  const notifications = useQuery(api.notifications.queries.list, activeOrgId ? { 
     orgId: activeOrgId, 
     sessionId 
   } : "skip");
   
-  const unreadCount = notifications?.filter(n => !n.isRead).length ?? 0;
+  const unreadCount = notifications?.filter((n: any) => !n.isRead).length ?? 0;
   
-  const markRead = useMutation(api.admin_notifications.markRead);
-  const archive = useMutation(api.admin_notifications.archive);
+  const markRead = useMutation(api.notifications.mutations.markRead);
+  const archive = useMutation(api.notifications.mutations.archive);
 
   const handleMarkAllRead = async () => {
     if (!notifications || !activeOrgId) return;
@@ -77,14 +77,14 @@ export function NotificationBell() {
         <ScrollArea className="h-[400px]">
           {notifications && notifications.length > 0 ? (
             <div className="flex flex-col">
-              {notifications.map((n) => (
+              {notifications.map((n: any) => (
                 <div 
                     key={n._id} 
                     className={cn(
                         "group flex flex-col gap-1 p-4 border-b border-border/10 transition-all hover:bg-accent/30 cursor-pointer",
                         !n.isRead && "bg-primary/5 border-l-2 border-l-primary"
                     )}
-                    onClick={() => markRead({ id: n._id, isRead: true, orgId: orgId as any, sessionId })}
+                    onClick={() => activeOrgId && markRead({ id: n._id, isRead: true, orgId: activeOrgId, sessionId })}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -168,3 +168,4 @@ export function NotificationBell() {
     </DropdownMenu>
   );
 }
+

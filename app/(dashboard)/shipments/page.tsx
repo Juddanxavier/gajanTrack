@@ -25,28 +25,28 @@ import { Badge as UIWebBadge } from '@/components/ui/badge';
 
 export default function ShipmentsPage() {
   const { activeOrgId, sessionId } = useOrg();
-  const currentUser = useQuery(api.users.getCurrentUser);
+  const currentUser = useQuery(api.users.queries.getCurrentUser, { sessionId });
 
   const shipments = useQuery(
-    api.shipments.listShipments,
+    api.shipments.queries.listShipments,
     activeOrgId
       ? { orgId: activeOrgId, includeArchived: false, sessionId }
       : 'skip',
   );
 
   const archivedShipments = useQuery(
-    api.shipments.listShipments,
+    api.shipments.queries.listShipments,
     activeOrgId
       ? { orgId: activeOrgId, includeArchived: true, sessionId }
       : 'skip',
   );
 
   const stats = useQuery(
-    api.shipments.getShipmentStats,
+    api.shipments.queries.getShipmentStats,
     activeOrgId ? { orgId: activeOrgId, sessionId } : 'skip',
   );
 
-  const getQuota = useAction(api.shipments.get17TrackQuota);
+  const getQuota = useAction(api.shipments.actions.get17TrackQuota);
   const [quota, setQuota] = React.useState<{total: number, used: number, remaining: number} | null>(null);
 
   React.useEffect(() => {
@@ -69,17 +69,17 @@ export default function ShipmentsPage() {
 
   const getFilteredData = () => {
     if (activeTab === 'archived') {
-      return (archivedShipments || []).filter((s) => s.archived_at);
+      return (archivedShipments || []).filter((s: any) => s.archived_at);
     }
 
     const active = shipments || [];
     if (activeTab === 'all') return active;
     if (activeTab === 'exception') {
       return active.filter(
-        (s) => s.status === 'exception' || s.status === 'failed_attempt',
+        (s: any) => s.status === 'exception' || s.status === 'failed_attempt',
       );
     }
-    return active.filter((s) => s.status === activeTab);
+    return active.filter((s: any) => s.status === activeTab);
   };
 
   const filteredData = getFilteredData();
@@ -205,3 +205,4 @@ export default function ShipmentsPage() {
     </div>
   );
 }
+

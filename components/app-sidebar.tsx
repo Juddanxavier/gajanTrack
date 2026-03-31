@@ -93,7 +93,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { sessionId } = useOrg();
-  const user = useQuery(api.users.getCurrentUser, { sessionId });
+  const user = useQuery(api.users.queries.getCurrentUser, { sessionId });
   const isLoaded = user !== undefined;
 
   const userData = React.useMemo(() => {
@@ -101,7 +101,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return {
       name: user.name || 'User',
       email: user.email || '',
-      avatar: user.avatar || '',
+      avatar: user.image || user.avatarUrl || '',
       role: user.role || '',
     };
   }, [user]);
@@ -119,8 +119,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className='data-[slot=sidebar-menu-button]:p-1.5!'>
               <a href='/dashboard'>
                 <IconInnerShadowTop className='size-5!' />
-                <span className='text-base font-semibold'>KAJEN TRACK</span>
+                <span className='text-base font-semibold'>{(process.env.NEXT_PUBLIC_APP_NAME || 'GT Express').toUpperCase()}</span>
               </a>
+
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -160,3 +161,4 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </Sidebar>
   );
 }
+
