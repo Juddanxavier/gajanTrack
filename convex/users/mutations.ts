@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, internalMutation } from "../_generated/server";
-import { requireAdmin } from "../rbac";
+import { requireAdmin, requireUser } from "../rbac";
 
 /**
  * Sync user from Clerk webhook to Convex database.
@@ -16,6 +16,7 @@ export const syncUser = mutation({
     createdAt: v.optional(v.number()),
     role: v.optional(v.union(v.literal("admin"), v.literal("staff"), v.literal("customer"))),
     orgId: v.optional(v.union(v.id("organizations"), v.string())),
+    sessionId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const existingUser = await ctx.db
@@ -52,7 +53,7 @@ export const syncUser = mutation({
         type: "user_signup",
         title: "New User Registered",
         message: `${args.name || args.email || "A new user"} has joined the organization as a ${role}.`,
-        link: `/dashboard/users`,
+        link: `/users`,
         isRead: false,
         priority: role === "customer" ? "low" : "medium",
         createdAt: Date.now(),
@@ -78,6 +79,67 @@ export const deleteUser = mutation({
 });
 
 /**
+ * Update a user (Admin/Staff only).
+ */
+export const updateUser = mutation({
+  args: {
+    userId: v.id("users"),
+    sessionId: v.optional(v.string()),
+    name: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    role: v.optional(v.union(v.literal("admin"), v.literal("staff"), v.literal("customer"))),
+    orgId: v.optional(v.union(v.id("organizations"), v.string())),
+    avatarUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { user: currentUser } = await requireUser(ctx, args.sessionId);
+    if (currentUser.role !== "admin" && currentUser.role !== "staff") {
+      throw new Error("Forbidden: Access denied to user management");
+    }
+
+    const targetUser = await ctx.db.get(args.userId);
+    if (!targetUser) throw new Error("User not found");
+
+    const patch: any = {};
+    if (args.name !== undefined) patch.name = args.name;
+    if (args.phone !== undefined) patch.phone = args.phone;
+    if (args.avatarUrl !== undefined) patch.avatarUrl = args.avatarUrl;
+    if (args.orgId !== undefined) patch.orgId = args.orgId;
+
+    if (args.role !== undefined && args.role !== targetUser.role) {
+      // Security: Only admins can promote to admin
+      if (args.role === "admin" && currentUser.role !== "admin") {
+        throw new Error("Forbidden: Only admins can promote others to admin role");
+      }
+      
+      // Staff can change role to staff or customer, but cannot change someone else's role if they are admin
+      if (currentUser.role === "staff" && targetUser.role === "admin") {
+        throw new Error("Forbidden: Staff cannot modify admin users");
+      }
+
+      patch.role = args.role;
+      
+      // Log role change
+      if (targetUser.orgId) {
+        await ctx.db.insert("admin_notifications", {
+          orgId: targetUser.orgId as any,
+          type: "role_updated",
+          title: "Security Alert: Role Changed",
+          message: `User ${targetUser.name || targetUser.email} role has been updated to ${args.role} by ${currentUser.name || currentUser.email}.`,
+          link: `/users/${targetUser._id}`,
+          isRead: false,
+          priority: "high",
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    await ctx.db.patch(args.userId, patch);
+    return args.userId;
+  },
+});
+
+/**
  * Update a user's role (Admin only).
  */
 export const updateUserRole = mutation({
@@ -98,7 +160,7 @@ export const updateUserRole = mutation({
         type: "role_updated",
         title: "Security Alert: Role Changed",
         message: `User ${user.name || user.email} role has been updated to ${args.role}.`,
-        link: `/dashboard/users`,
+        link: `/users/${user._id}`,
         isRead: false,
         priority: "high",
         createdAt: Date.now(),

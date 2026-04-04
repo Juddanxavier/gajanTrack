@@ -60,5 +60,38 @@ export const performRetentionCleanup = internalMutation({
         console.log(`[RETENTION] Quotes: Purged ${toDelete.length} deleted, ${toPurgeFromArchive.length} archived.`);
         console.log(`[RETENTION] Notifications: Archived ${toArchive.length}, Deleted ${toDeleteFinal.length}.`);
     }
+
+    // 4. Cleanup Shipments scheduled for deletion
+    const toDeleteShipments = await ctx.db
+      .query("shipments")
+      .withIndex("by_scheduled_for_deletion_at", (q) => q.lt("scheduled_for_deletion_at", now))
+      .take(100);
+
+    for (const shipment of toDeleteShipments) {
+      // Cascading delete: tracking_events
+      const trackingEvents = await ctx.db
+        .query("tracking_events")
+        .withIndex("by_shipment_id", (q) => q.eq("shipment_id", shipment._id))
+        .collect();
+      for (const event of trackingEvents) {
+        await ctx.db.delete(event._id);
+      }
+
+      // Cascading delete: communication_logs
+      const commLogs = await ctx.db
+        .query("communication_logs")
+        .withIndex("by_shipmentId", (q) => q.eq("shipmentId", shipment._id))
+        .collect();
+      for (const log of commLogs) {
+        await ctx.db.delete(log._id);
+      }
+
+      // Finally, delete the shipment itself
+      await ctx.db.delete(shipment._id);
+    }
+
+    if (toDeleteShipments.length > 0) {
+      console.log(`[RETENTION] Shipments: Purged ${toDeleteShipments.length} scheduled for deletion (with cascading events/logs).`);
+    }
   },
 });

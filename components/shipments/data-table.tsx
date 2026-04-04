@@ -50,6 +50,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -201,9 +208,39 @@ export function ShipmentsDataTable<TData, TValue>({
                 onChange={(event) =>
                   table.getColumn("tracking_number")?.setFilterValue(event.target.value)
                 }
-                className="pl-11 bg-background/50 border-border/50 h-12 text-sm font-medium focus-visible:ring-primary/20"
+                className="pl-11 bg-background/50 border-border/50 h-10 w-full sm:w-[250px] text-sm font-medium focus-visible:ring-primary/20"
               />
             </div>
+            
+            {/* Carrier Filter */}
+            {table.getColumn("carrier_code") && (
+              <Select
+                value={(table.getColumn("carrier_code")?.getFilterValue() as string) ?? "all"}
+                onValueChange={(val) => {
+                  table.getColumn("carrier_code")?.setFilterValue(val === "all" ? undefined : val);
+                }}
+              >
+                <SelectTrigger className="h-10 w-[140px] bg-background/50 border-border/50 text-sm font-medium">
+                  <SelectValue placeholder="All Carriers" />
+                </SelectTrigger>
+                <SelectContent className="bg-card">
+                  <SelectItem value="all">All Carriers</SelectItem>
+                  {(() => {
+                    const carriersMap = new Map<string, string>();
+                    data.forEach((d: any) => {
+                      if (d.carrier_code && !carriersMap.has(d.carrier_code)) {
+                        carriersMap.set(d.carrier_code, d.carrier_name || d.carrier_code);
+                      }
+                    });
+                    return Array.from(carriersMap.entries()).map(([code, name]) => (
+                      <SelectItem key={code} value={code}>
+                        <span className="uppercase">{name}</span>
+                      </SelectItem>
+                    ));
+                  })()}
+                </SelectContent>
+              </Select>
+            )}
 
             {hasSelection && (
                 <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">

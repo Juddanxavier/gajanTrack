@@ -53,8 +53,10 @@ import {
   IconEdit,
   IconTrash,
   IconLock,
-  IconArrowsSort
+  IconArrowsSort,
+  IconExternalLink
 } from '@tabler/icons-react';
+import Link from 'next/link';
 
 interface UserListProps {
   users: any[] | undefined;
@@ -91,7 +93,13 @@ export function UserList({ users, currentUser, orgMap }: UserListProps) {
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="font-semibold text-sm tracking-tight">{user.name || 'Anonymous'}</span>
+              <Link 
+                href={`/users/${user._id}`}
+                className="font-semibold text-sm tracking-tight hover:text-primary transition-colors flex items-center gap-1 group"
+              >
+                {user.name || 'Anonymous'}
+                <IconExternalLink className="size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
               <span className="text-xs text-muted-foreground/80 lowercase">{user.email || 'No email'}</span>
             </div>
           </div>
@@ -150,14 +158,18 @@ export function UserList({ users, currentUser, orgMap }: UserListProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel className="text-xs italic">User Actions</DropdownMenuLabel>
-                <DropdownMenuItem className="gap-2">
-                  <IconEdit className="size-4" /> Edit Profile
+                <DropdownMenuItem asChild>
+                  <Link href={`/users/${user._id}`} className="flex items-center gap-2 w-full cursor-pointer">
+                    <IconEdit className="size-4" /> Edit Profile
+                  </Link>
                 </DropdownMenuItem>
                 
                 {currentUser.role === 'admin' && (
                   <>
-                    <DropdownMenuItem className="gap-2">
-                      <IconLock className="size-4" /> Access Control
+                    <DropdownMenuItem asChild>
+                      <Link href={`/users/${user._id}?tab=access`} className="flex items-center gap-2 w-full cursor-pointer">
+                        <IconLock className="size-4" /> Access Control
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive focus:bg-destructive/5">

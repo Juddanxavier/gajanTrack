@@ -63,7 +63,7 @@ const data = {
     },
     {
       title: 'Users',
-      url: '/dashboard/users',
+      url: '/users',
       icon: IconUsers,
     },
   ],
@@ -85,7 +85,7 @@ const data = {
     },
     {
       title: 'Search',
-      url: '#',
+      url: '/search',
       icon: IconSearch,
     },
   ],
@@ -93,10 +93,11 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { sessionId } = useOrg();
-  const user = useQuery(api.users.queries.getCurrentUser, { sessionId });
-  const isLoaded = user !== undefined;
+  const settingsCtx = useQuery(api.organizations.queries.getSettings, { sessionId });
+  const isLoaded = settingsCtx !== undefined;
 
   const userData = React.useMemo(() => {
+    const user = settingsCtx?.user;
     if (!user) return { name: 'User', email: '', avatar: '', role: '' };
     return {
       name: user.name || 'User',
@@ -104,7 +105,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       avatar: user.image || user.avatarUrl || '',
       role: user.role || '',
     };
-  }, [user]);
+  }, [settingsCtx?.user]);
+
+  const orgData = settingsCtx?.organization;
 
   if (!isLoaded) return null;
 
@@ -118,8 +121,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className='data-[slot=sidebar-menu-button]:p-1.5!'>
               <a href='/dashboard'>
-                <IconInnerShadowTop className='size-5!' />
-                <span className='text-base font-semibold'>{(process.env.NEXT_PUBLIC_APP_NAME || 'GT Express').toUpperCase()}</span>
+                {orgData?.logoUrl ? (
+                  <img src={orgData.logoUrl} alt={orgData.name || 'Logo'} className='size-6 rounded-sm object-contain' />
+                ) : (
+                  <IconInnerShadowTop className='size-5!' />
+                )}
+                <span className='text-base font-semibold'>{orgData?.name?.toUpperCase() || (process.env.NEXT_PUBLIC_APP_NAME || 'GT Express').toUpperCase()}</span>
               </a>
 
             </SidebarMenuButton>

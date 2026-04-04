@@ -63,6 +63,16 @@ async function logRequest(ctx: any, provider: string, request: Request) {
     });
 }
 
+function verifyWebhookSecret(request: Request) {
+    const SECRET = process.env.TRACKING_WEBHOOK_SECRET;
+    if (SECRET) {
+        const auth = request.headers.get("authorization") || request.headers.get("x-webhook-secret");
+        if (auth !== SECRET && auth !== `Bearer ${SECRET}`) {
+            throw new Error("Unauthorized: Invalid webhook secret");
+        }
+    }
+}
+
 http.route({
   path: "/hi",
   method: "GET",
@@ -182,6 +192,7 @@ http.route({
   path: "/webhooks/trackingmore",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
+    verifyWebhookSecret(request);
     const logId = await logRequest(ctx, "trackingmore", request);
     try {
         const payload = await request.json();
@@ -211,6 +222,7 @@ http.route({
   path: "/webhooks/track123",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
+    verifyWebhookSecret(request);
     const logId = await logRequest(ctx, "track123", request);
     try {
         const payload = await request.json();
@@ -240,6 +252,7 @@ http.route({
   path: "/webhooks/track17",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
+    verifyWebhookSecret(request);
     const logId = await logRequest(ctx, "track17", request);
     try {
         const payload = await request.json();

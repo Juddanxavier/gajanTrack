@@ -41,7 +41,11 @@ export const findCustomerByContact = query({
       .unique();
 
     const foundUser = userByEmail || userByPhone;
-    if (foundUser) return { ...foundUser, isUser: true };
+    
+    // Check if the found user belongs to the requested organization
+    if (foundUser && foundUser.orgId === args.orgId) {
+      return { ...foundUser, isUser: true };
+    }
 
     const recentShipment = await ctx.db
       .query("shipments")
@@ -134,5 +138,28 @@ export const getUserStats = query({
         customer: sparklines.map(s => ({ count: s.customer })),
       }
     };
+  },
+});
+
+/**
+ * Get a specific user by ID.
+ */
+export const getUser = query({
+  args: { id: v.id("users"), sessionId: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const { user: currentUser } = await requireUser(ctx, args.sessionId);
+    const user = await ctx.db.get(args.id);
+    if (!user) return null;
+
+    // RBAC: Admins can see everyone. Staff can only see users in their org and not other admins.
+    if (currentUser.role === "admin") return user;
+    if (currentUser.role === "staff") {
+      if (user.orgId === currentUser.orgId && user.role !== "admin") return user;
+    }
+    
+    // Users can see themselves
+    if (user.externalId === currentUser.externalId) return user;
+
+    throw new Error("Forbidden: Access denied to this user record");
   },
 });

@@ -210,5 +210,32 @@ export default defineSchema({
     .index("by_isRead", ["isRead"])
     .index("by_archivedAt", ["archivedAt"])
     .index("by_createdAt", ["createdAt"]),
+  
+  communication_logs: defineTable({
+    shipmentId: v.id('shipments'),
+    type: v.union(v.literal('whatsapp'), v.literal('email')),
+    recipient: v.string(), // phone or email
+    content: v.string(), // Short summary or template name
+    status: v.union(v.literal('sent'), v.literal('failed')),
+    messageId: v.optional(v.string()), // provider-side ID (request_id)
+    error: v.optional(v.string()),
+    sentAt: v.number(),
+  })
+    .index('by_shipmentId', ['shipmentId'])
+    .index('by_sentAt', ['sentAt']),
+
+  audit_logs: defineTable({
+    userId: v.string(), // Clerk external ID of the user performing the action
+    orgId: v.union(v.id("organizations"), v.string()), // Org where the action took place
+    action: v.string(), // e.g. "update_shipment", "delete_quote"
+    entityId: v.string(), // ID of the shipment, quote, etc.
+    entityType: v.string(), // e.g. "shipments", "quotes"
+    details: v.any(), // JSON payload of changes
+    timestamp: v.number(),
+  })
+    .index("by_orgId", ["orgId"])
+    .index("by_userId", ["userId"])
+    .index("by_entityId", ["entityId"])
+    .index("by_timestamp", ["timestamp"]),
 
 });

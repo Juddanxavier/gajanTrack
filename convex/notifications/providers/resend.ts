@@ -5,7 +5,7 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 export class ResendProvider implements IEmailProvider {
   name = "resend";
 
-  async send(to: string, subject: string, variables: Record<string, string>): Promise<{ success: boolean; error?: string }> {
+  async send(to: string, subject: string, variables: Record<string, string>): Promise<{ success: boolean; messageId?: string; error?: string }> {
     console.log(`[ResendProvider] Sending Email to ${to}: ${subject}`);
 
     if (!RESEND_API_KEY) {
@@ -35,7 +35,7 @@ export class ResendProvider implements IEmailProvider {
       }
 
       console.log(`[ResendProvider] Email sent:`, result.id);
-      return { success: true };
+      return { success: true, messageId: result.id };
     } catch (error) {
       console.error(`[ResendProvider] Exception:`, error);
       return { success: false, error: String(error) };

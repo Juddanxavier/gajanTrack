@@ -36,6 +36,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { IconLoader2, IconBriefcase, IconBuilding } from '@tabler/icons-react';
+import { getCountryConfig } from '@/lib/countries';
 
 const createUserSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -151,15 +152,21 @@ export function CreateUserDialog({ children }: CreateUserDialogProps) {
             <FormField
               control={form.control}
               name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone Number (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="+1 234 567 890" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const selectedOrgId = form.watch('orgId');
+                const selectedOrg = organizations?.find((o: any) => o._id === selectedOrgId);
+                const countryConfig = getCountryConfig(selectedOrg?.country);
+                
+                return (
+                  <FormItem>
+                    <FormLabel>Phone Number (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder={countryConfig.placeholder} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             {isAdmin ? (

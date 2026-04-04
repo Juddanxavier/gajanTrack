@@ -41,4 +41,10 @@ crons.daily(
   internal.webhook_logs.cleanupWebhookLogs,
 );
 
+crons.daily(
+  "communication-log-cleanup",
+  { hourUTC: 4, minuteUTC: 0 },
+  internal.communication.cleanupCommunicationLogs,
+);
+
 export default crons;

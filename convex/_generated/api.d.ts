@@ -9,7 +9,9 @@
  */
 
 import type * as analytics_queries from "../analytics/queries.js";
+import type * as audit from "../audit.js";
 import type * as clerk from "../clerk.js";
+import type * as communication from "../communication.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as lib_shipments from "../lib/shipments.js";
@@ -29,6 +31,7 @@ import type * as quotes_queries from "../quotes/queries.js";
 import type * as rbac from "../rbac.js";
 import type * as reports_queries from "../reports/queries.js";
 import type * as retention from "../retention.js";
+import type * as search from "../search.js";
 import type * as sessions from "../sessions.js";
 import type * as shipments_actions from "../shipments/actions.js";
 import type * as shipments_internal from "../shipments/internal.js";
@@ -52,7 +55,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "analytics/queries": typeof analytics_queries;
+  audit: typeof audit;
   clerk: typeof clerk;
+  communication: typeof communication;
   crons: typeof crons;
   http: typeof http;
   "lib/shipments": typeof lib_shipments;
@@ -72,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   rbac: typeof rbac;
   "reports/queries": typeof reports_queries;
   retention: typeof retention;
+  search: typeof search;
   sessions: typeof sessions;
   "shipments/actions": typeof shipments_actions;
   "shipments/internal": typeof shipments_internal;

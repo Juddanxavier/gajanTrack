@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useOrg } from '@/components/providers/org-provider';
+import { useRouter } from 'next/navigation';
 import { UserList } from '@/components/users/user-list';
 import { CreateUserDialog } from '@/components/users/create-user-dialog';
 import { Button } from '@/components/ui/button';
@@ -18,13 +19,20 @@ import {
 } from '@tabler/icons-react';
 
 export default function UsersPage() {
+  const router = useRouter();
   const { sessionId } = useOrg();
   const currentUser = useQuery(api.users.queries.getCurrentUser, { sessionId });
   const users = useQuery(api.users.queries.listUsers, { sessionId });
   const userStats = useQuery(api.users.queries.getUserStats, { sessionId });
   const organizations = useQuery(api.organizations.queries.listOrganizations, { sessionId });
 
-  if (!currentUser) return null;
+  React.useEffect(() => {
+    if (currentUser && currentUser.role === 'customer') {
+      router.push('/unauthorized');
+    }
+  }, [currentUser, router]);
+
+  if (!currentUser || currentUser.role === 'customer') return null;
 
   const isAdmin = currentUser.role === 'admin';
   const canCreateUsers = isAdmin || currentUser.role === 'staff';

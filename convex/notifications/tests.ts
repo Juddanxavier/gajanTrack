@@ -36,21 +36,13 @@ export const runNotificationTest = action({
     console.log(`[TEST] Simulated Shipment:`, mockShipment);
 
     try {
-      // 1. Email
-      const emailRes = mockShipment.customer_email ? 
-        await notificationRouter.notifyStatusUpdate({ ...mockShipment, customer_phone: null }, "delivered") : [{ success: false, error: "No Email Provided" }];
+      // 1. Email + WhatsApp
+      // Note: notifyStatusUpdate now handles its own logging to the DB
+      await notificationRouter.notifyStatusUpdate(ctx, mockShipment, "delivered");
       
-      // 2. WhatsApp
-      const waRes = mockShipment.customer_phone ? 
-        await notificationRouter.notifyStatusUpdate({ ...mockShipment, customer_email: null }, "delivered") : [{ success: false, error: "No Phone Provided" }];
-
       return {
         success: true,
-        message: "Automated test executed",
-        details: {
-          email: emailRes[0].success ? "SENT ✅" : `FAILED ❌ (${emailRes[0].error || 'Unknown Error'})`,
-          whatsapp: waRes[0].success ? "SENT ✅" : `FAILED ❌ (${waRes[0].error || 'Unknown Error'})`
-        },
+        message: "Automated test executed. Check communication_logs for results.",
         target: {
           email: mockShipment.customer_email,
           phone: mockShipment.customer_phone

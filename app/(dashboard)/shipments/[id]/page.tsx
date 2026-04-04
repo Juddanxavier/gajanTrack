@@ -58,7 +58,15 @@ export default function ShipmentDetailsPage() {
   const refreshAction = useAction(api.shipments.actions.refreshShipment);
   const updateShipment = useMutation(api.shipments.mutations.updateShipment);
   
+  const communicationLogs = useQuery(
+    api.communication.getShipmentLogs,
+    activeOrgId ? { shipmentId, orgId: activeOrgId, sessionId } : "skip"
+  );
+  
+  const manualNotification = useAction(api.notifications.actions.sendManualNotification);
+  
   const [refreshing, setRefreshing] = React.useState(false);
+  const [sendingWhatsApp, setSendingWhatsApp] = React.useState(false);
   const [retrackOpen, setRetrackOpen] = React.useState(false);
   const [qrOpen, setQrOpen] = React.useState(false);
 
@@ -94,6 +102,37 @@ export default function ShipmentDetailsPage() {
       toast.error('Failed to sync telemetry');
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleManualWhatsApp = async () => {
+    if (!shipment?.customer_phone) {
+        toast.error("No phone number found for this shipment");
+        return;
+    }
+    
+    setSendingWhatsApp(true);
+    const toastId = toast.loading("Dispatching WhatsApp alert...");
+    
+    try {
+        if (!activeOrgId) throw new Error("No active organization");
+        const res = await manualNotification({ 
+            id: shipmentId, 
+            status: shipment.status || "tracking_update",
+            orgId: activeOrgId,
+            sessionId: sessionId 
+        });
+        
+        if (res.success) {
+            toast.success("WhatsApp alert dispatched", { id: toastId });
+        } else {
+            toast.error(res.message || "Failed to send WhatsApp", { id: toastId });
+        }
+    } catch (error) {
+        console.error(error);
+        toast.error("Error triggering notification", { id: toastId });
+    } finally {
+        setSendingWhatsApp(false);
     }
   };
 
@@ -410,6 +449,72 @@ export default function ShipmentDetailsPage() {
                                     />
                                 </div>
                             ))}
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Communication History */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Communication History</p>
+                            <HistoryIcon className="h-3 w-3 text-muted-foreground/30" />
+                        </div>
+
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full h-8 text-[10px] font-bold uppercase tracking-widest gap-2 bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary"
+                            onClick={handleManualWhatsApp}
+                            disabled={sendingWhatsApp || !shipment.customer_phone}
+                        >
+                            {sendingWhatsApp ? (
+                                <RefreshCw className="h-3 w-3 animate-spin" />
+                            ) : (
+                                <MessageSquare className="h-3 w-3" />
+                            )}
+                            Send Manual Alert
+                        </Button>
+
+                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                            {communicationLogs === undefined ? (
+                                <div className="flex justify-center py-4"><RefreshCw className="h-4 w-4 animate-spin text-muted-foreground/20" /></div>
+                            ) : communicationLogs.length === 0 ? (
+                                <p className="text-[10px] text-muted-foreground/40 italic text-center py-2">No notifications sent yet</p>
+                            ) : (
+                                communicationLogs.map((log) => (
+                                    <div key={log._id} className="group relative pl-3 border-l-2 border-border/40 hover:border-primary/40 transition-colors py-1">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <div className="flex items-center gap-1.5">
+                                                {log.type === 'whatsapp' ? (
+                                                    <MessageSquare className="h-3 w-3 text-emerald-500" />
+                                                ) : (
+                                                    <Mail className="h-3 w-3 text-blue-500" />
+                                                )}
+                                                <span className="text-[10px] font-bold uppercase tracking-tight">{log.type}</span>
+                                            </div>
+                                            <span className="text-[9px] text-muted-foreground/40 font-mono">
+                                                {format(log.sentAt, 'HH:mm')}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground line-clamp-1">{log.content}</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <Badge variant="outline" className={cn(
+                                                "text-[8px] px-1.5 py-0 h-3.5 border-none bg-transparent font-black uppercase tracking-tighter",
+                                                log.status === 'sent' ? "text-emerald-500" : "text-rose-500"
+                                            )}>
+                                                • {log.status}
+                                            </Badge>
+                                            <span className="text-[9px] text-muted-foreground/20 font-bold uppercase tracking-widest">
+                                                {format(log.sentAt, 'MMM d')}
+                                            </span>
+                                        </div>
+                                        {log.error && (
+                                            <p className="text-[9px] text-rose-400/60 leading-tight mt-1 bg-rose-500/5 p-1 rounded italic">{log.error}</p>
+                                        )}
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>

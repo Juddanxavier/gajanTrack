@@ -10,6 +10,7 @@ import { api } from '@/convex/_generated/api';
 import { toast } from 'sonner';
 import { getTracking } from 'ts-tracking-number';
 import { useOrg } from '@/components/providers/org-provider';
+import { getCountryConfig } from '@/lib/countries';
 
 import {
   Dialog,
@@ -542,19 +543,22 @@ export function AddShipmentDialog({ children }: AddShipmentDialogProps) {
                 <FormField
                   control={form.control}
                   name="customer_phone"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground ml-1">WhatsApp / Phone</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="+91 99999 99999"
-                          className="h-11 bg-muted/30 border-border/40 rounded-lg font-bold"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const countryConfig = getCountryConfig(activeOrg?.country);
+                    return (
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground ml-1">WhatsApp / Phone</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={countryConfig.placeholder}
+                            className="h-11 bg-muted/30 border-border/40 rounded-lg font-bold"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
 

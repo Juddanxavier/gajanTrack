@@ -7,7 +7,7 @@ const TWILIO_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER; // e.g., "wha
 export class TwilioProvider implements IWhatsAppProvider {
   name = "twilio";
 
-  async send(to: string, templateId: string, variables: Record<string, string>): Promise<{ success: boolean; error?: string }> {
+  async send(to: string, templateId: string, variables: Record<string, string>): Promise<{ success: boolean; messageId?: string; error?: string }> {
     console.log(`[TwilioProvider] Sending WhatsApp to ${to} (Template: ${templateId})`);
 
     if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_WHATSAPP_NUMBER) {
@@ -44,7 +44,7 @@ export class TwilioProvider implements IWhatsAppProvider {
       }
 
       console.log(`[TwilioProvider] WhatsApp sent:`, result.sid);
-      return { success: true };
+      return { success: true, messageId: result.sid };
     } catch (error) {
       console.error(`[TwilioProvider] Exception:`, error);
       return { success: false, error: String(error) };

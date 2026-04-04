@@ -5,7 +5,7 @@ import { v } from "convex/values";
  */
 export interface IEmailProvider {
   name: string;
-  send(to: string, subject: string, variables: Record<string, string>): Promise<{ success: boolean; error?: string }>;
+  send(to: string, subject: string, variables: Record<string, string>): Promise<{ success: boolean; messageId?: string; error?: string }>;
 }
 
 /**
@@ -13,7 +13,7 @@ export interface IEmailProvider {
  */
 export interface IWhatsAppProvider {
   name: string;
-  send(to: string, templateId: string, variables: Record<string, string>): Promise<{ success: boolean; error?: string }>;
+  send(to: string, templateId: string, variables: Record<string, string>): Promise<{ success: boolean; messageId?: string; error?: string }>;
 }
 
 export type NotificationProvider = "resend" | "twilio" | "msg91" | "mock";
