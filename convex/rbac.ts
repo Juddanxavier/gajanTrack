@@ -27,7 +27,9 @@ export async function requireUser(ctx: GenericCtx, sessionId?: string) {
     throw new Error("Unauthenticated: User record not found in database");
   }
 
-  // If sessionId is provided, verify it exists and hasn't expired
+  // If sessionId is provided, try to find and validate it.
+  // If the session doesn't exist yet (race condition on first page load),
+  // we fall through gracefully — the user is still authenticated via Clerk.
   if (sessionId) {
     const session = await ctx.db
       .query("sessions")
@@ -36,12 +38,11 @@ export async function requireUser(ctx: GenericCtx, sessionId?: string) {
       )
       .unique();
 
-    if (!session || session.expiresAt < Date.now()) {
-      throw new Error("Unauthenticated: Session invalid or expired");
+    if (session && session.expiresAt >= Date.now()) {
+      // Valid session found — return full context
+      return { user, session };
     }
-    
-    // Return both user and session for context
-    return { user, session };
+    // Session not found or expired — fall through (Clerk identity is still valid)
   }
 
   return { user, session: null };

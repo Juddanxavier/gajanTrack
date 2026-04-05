@@ -62,9 +62,20 @@ export const performRetentionCleanup = internalMutation({
     }
 
     // 4. Cleanup Shipments scheduled for deletion
+    // SAFETY GUARDS: Only delete shipments that are:
+    // - Explicitly archived (archived_at is set)
+    // - Not in an active transit status
+    // - Have a scheduled_for_deletion_at in the past
     const toDeleteShipments = await ctx.db
       .query("shipments")
       .withIndex("by_scheduled_for_deletion_at", (q) => q.lt("scheduled_for_deletion_at", now))
+      .filter((q) => q.and(
+          q.neq(q.field("archived_at"), undefined),   // MUST be archived first
+          q.neq(q.field("status"), "pending"),         // Never delete active shipments
+          q.neq(q.field("status"), "in_transit"),
+          q.neq(q.field("status"), "out_for_delivery"),
+          q.neq(q.field("status"), "info_received"),
+      ))
       .take(100);
 
     for (const shipment of toDeleteShipments) {

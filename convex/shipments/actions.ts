@@ -231,9 +231,10 @@ export const refreshShipmentByData = action({
     provider_metadata: v.optional(v.any()),
   },
   handler: async (ctx, args) => {
-    // 1. Find the shipment(s) with this tracking number
+    // 1. Find the shipment(s) with this tracking number AND carrier code to prevent multi-tenant data bleed
     const shipments = await ctx.runQuery(internal.shipments.internal.listByTrackingNumberInternal, {
-        tracking_number: args.tracking_number
+        tracking_number: args.tracking_number,
+        carrier_code: args.carrier_code
     });
 
     if (shipments.length === 0) {

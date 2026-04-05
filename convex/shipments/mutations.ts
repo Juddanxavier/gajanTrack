@@ -237,12 +237,13 @@ export const unarchiveShipment = mutation({
 export const deleteShipment = mutation({
   args: { id: v.id("shipments"), orgId: v.union(v.id("organizations"), v.string()), sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    await requireOrgRole(ctx, args.orgId, args.sessionId);
+    const { user } = await requireOrgRole(ctx, args.orgId, args.sessionId);
     const shipment = await ctx.db.get(args.id);
     if (!shipment || shipment.orgId !== args.orgId) {
       throw new Error("Shipment not found or access denied");
     }
 
+    // 1. Cascade: Tracking Events
     const events = await ctx.db
         .query("tracking_events")
         .withIndex("by_shipment_id", (q) => q.eq("shipment_id", args.id))
@@ -251,6 +252,30 @@ export const deleteShipment = mutation({
         await ctx.db.delete(event._id);
     }
     
+    // 2. Cascade: Communication Logs
+    const commLogs = await ctx.db
+        .query("communication_logs")
+        .withIndex("by_shipmentId", (q) => q.eq("shipmentId", args.id))
+        .collect();
+    for (const log of commLogs) {
+        await ctx.db.delete(log._id);
+    }
+
+    // 3. Write Audit Log before wiping
+    await ctx.db.insert("audit_logs", {
+        userId: user.externalId,
+        orgId: args.orgId,
+        action: "hard_delete_shipment",
+        entityId: args.id,
+        entityType: "shipments",
+        details: { 
+            tracking_number: shipment.tracking_number, 
+            carrier_code: shipment.carrier_code 
+        },
+        timestamp: Date.now()
+    });
+
+    // 4. Finally, wipe shipment
     await ctx.db.delete(args.id);
   },
 });

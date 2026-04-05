@@ -17,12 +17,22 @@ export const internalGetShipment = internalQuery({
  * Internal query to list shipments by tracking number.
  */
 export const listByTrackingNumberInternal = internalQuery({
-  args: { tracking_number: v.string() },
+  args: { 
+      tracking_number: v.string(),
+      carrier_code: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    return await ctx.db
+    let q = ctx.db
       .query("shipments")
-      .withIndex("by_tracking_number", (q) => q.eq("tracking_number", args.tracking_number))
-      .collect();
+      .withIndex("by_tracking_number", (q) => q.eq("tracking_number", args.tracking_number));
+      
+    const results = await q.collect();
+    
+    if (args.carrier_code) {
+        return results.filter(s => s.carrier_code === args.carrier_code);
+    }
+    
+    return results;
   },
 });
 
@@ -34,6 +44,7 @@ export const internalUpdateShipmentStatus = internalMutation({
     id: v.id("shipments"),
     status: v.string() as any,
     carrier_code: v.optional(v.string()),
+    provider: v.optional(v.union(v.literal("trackingmore"), v.literal("track123"), v.literal("track17"))),
     estimated_delivery: v.optional(v.string()),
     last_synced_at: v.optional(v.number()),
     events_raw: v.optional(v.string()),
@@ -232,11 +243,20 @@ export const cleanupArchivedShipments = internalMutation({
     }
 
     for (const shipment of toDelete) {
+        // Cascade: Tracking Events
         const events = await ctx.db
             .query("tracking_events")
             .withIndex("by_shipment_id", (q) => q.eq("shipment_id", shipment._id))
             .collect();
         for (const event of events) await ctx.db.delete(event._id);
+
+        // Cascade: Communication Logs
+        const commLogs = await ctx.db
+            .query("communication_logs")
+            .withIndex("by_shipmentId", (q) => q.eq("shipmentId", shipment._id))
+            .collect();
+        for (const log of commLogs) await ctx.db.delete(log._id);
+
         await ctx.db.delete(shipment._id);
     }
     
